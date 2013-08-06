@@ -81,7 +81,7 @@ section .text
 global _xeos_strlen
 
 ;-------------------------------------------------------------------------------
-; C99 - strlen() function
+; C99 - 32 bits strlen() function
 ; 
 ; size_t strlen( const char * s );
 ; 
