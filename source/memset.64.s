@@ -282,7 +282,7 @@ _memset64_sse2:
     .aligned_128:
         
         ; Writes 128 bytes into the memory buffer
-        movdqa  [ rdi ],        xmm0
+        movdqa  [ rdi       ], xmm0
         movdqa  [ rdi +  16 ],  xmm0
         movdqa  [ rdi +  32 ],  xmm0
         movdqa  [ rdi +  48 ],  xmm0
@@ -321,7 +321,7 @@ _memset64_sse2:
     .aligned_64:
         
         ; Writes 64 bytes into the memory buffer
-        movdqa  [ rdi ],        xmm0
+        movdqa  [ rdi      ], xmm0
         movdqa  [ rdi + 16 ],   xmm0
         movdqa  [ rdi + 32 ],   xmm0
         movdqa  [ rdi + 48 ],   xmm0
@@ -352,7 +352,7 @@ _memset64_sse2:
     .aligned_32:
         
         ; Writes 32 bytes into the memory buffer
-        movdqa  [ rdi ],        xmm0
+        movdqa  [ rdi      ], xmm0
         movdqa  [ rdi + 16 ],   xmm0
         
         ; Advances the memory pointer and decreases the number of bytes to write
@@ -422,6 +422,237 @@ _memset64_sse2:
 ;-------------------------------------------------------------------------------
 _memset64:
     
-    mov rax,    rdi
+    ; Saves the original memory pointer, as we'll need to return it
+    mov     r8,         rdi
     
-    ret
+    ; Checks if bytes needs to be set to zero
+    cmp     rsi,        0
+    je      .padded
+    
+    .pad:
+        
+        ; A character other than zero will be used. Fills the RSI registers
+        ; with eight time the character value, so will be able to write 8 bytes
+        ; at a time
+        mov     rcx,        rsi
+        shl     rsi,        8
+        or      rsi,        rcx
+        mov     rcx,        rsi
+        shl     rsi,        16
+        or      rsi,        rcx
+        mov     rcx,        rsi
+        shl     rsi,        32
+        or      rsi,        rcx
+        
+    .padded:
+        
+        ; Aligns the memory pointer in RDI to a 8-byte boundary
+        and     rdi,        -8
+        
+        ; Gets the number of misaligned bytes in the original string pointer (R8)
+        mov     rax,        r8
+        sub     rax,        rdi
+        
+        ; Checks if the pointer is already aligned
+        cmp     rax,        0
+        je      .aligned
+        
+        ; If not, computes the number of bytes to be written until we are
+        ; aligned on the next 8-byte boundary
+        mov     rcx,        8
+        sub     rcx,        rax
+        
+    .notaligned:
+        
+        ; Restores the original pointer in RDI
+        mov     rdi,        r8
+        
+        ; Stores the character to write in RAX, so we can access it as a byte
+        ; using AL
+        mov     rax,        rsi
+        
+    .notaligned_loop:
+        
+        ; Checks if we have bytes to write
+        cmp     rdx,        0
+        je      .end
+        
+        ; Writes a byte into the memory buffer
+        mov     [ rdi ],    al
+        
+        ; Advances the memory pointer
+        inc     rdi
+        
+        ; Decreases the number of bytes to write (RDX is the total, RCX is the
+        ; number of bytes to write until we're aligned to a 16-byte boundary)
+        dec     rcx
+        dec     rdx
+        
+        ; Checks if we are aligned to a 8-byte boundary. If so, we'll be able
+        ; to write more than one byte at a time
+        cmp     rcx,        0
+        je      .aligned
+        jmp     .notaligned_loop
+        
+    .aligned:
+        
+        ; Writes 8 bytes at a time, if possible
+        cmp     rdx,        128
+        jge     .aligned_128
+        
+        ; Writes 4 bytes at a time, if possible
+        cmp     rdx,        64
+        jge     .aligned_64
+        
+        ; Writes 3 bytes at a time, if possible
+        cmp     rdx,        32
+        jge     .aligned_32
+    
+        ; Writes 16 bytes at a time, if possible
+        cmp     rdx,        16
+        jge     .aligned_16
+        
+    .aligned_end:
+        
+        ; We're aligned on a 8-byte boundary, but there's not enough bytes
+        ; to writ, so writes the remaining bytes one by one
+        mov     rcx,            rdx
+        mov     rax,            rsi
+        jmp     .notaligned_loop
+        
+    .aligned_128:
+        
+        ; Writes 128 bytes into the memory buffer
+        mov  [ rdi       ],  rsi
+        mov  [ rdi +   8 ],  rsi
+        mov  [ rdi +  16 ],  rsi
+        mov  [ rdi +  24 ],  rsi
+        mov  [ rdi +  32 ],  rsi
+        mov  [ rdi +  40 ],  rsi
+        mov  [ rdi +  48 ],  rsi
+        mov  [ rdi +  56 ],  rsi
+        mov  [ rdi +  64 ],  rsi
+        mov  [ rdi +  72 ],  rsi
+        mov  [ rdi +  80 ],  rsi
+        mov  [ rdi +  88 ],  rsi
+        mov  [ rdi +  96 ],  rsi
+        mov  [ rdi + 104 ],  rsi
+        mov  [ rdi + 112 ],  rsi
+        mov  [ rdi + 120 ],  rsi
+        
+        ; Advances the memory pointer and decreases the number of bytes to write
+        add     rdi,            128
+        sub     rdx,            128
+        
+        ; Next bytes - Writes 128 bytes at a time, if possible
+        cmp     rdx,            128
+        jge     .aligned_128
+        
+        ; Next bytes - Writes 64 bytes at a time, if possible
+        cmp     rdx,            64
+        jge     .aligned_64
+        
+        ; Next bytes - Writes 32 bytes at a time, if possible
+        cmp     rdx,            32
+        jge     .aligned_32
+        
+        ; Next bytes - Writes 16 bytes at a time, if possible
+        cmp     rdx,            16
+        jge     .aligned_16
+        
+        ; Checks if we're done writing bytes
+        cmp     rdx,            0
+        je      .end
+        
+        ; If we still have byte to write, writes them one by one
+        jmp     .aligned_end
+        
+    .aligned_64:
+        
+        ; Writes 64 bytes into the memory buffer
+        mov  [ rdi       ],  rsi
+        mov  [ rdi +   8 ],  rsi
+        mov  [ rdi +  16 ],  rsi
+        mov  [ rdi +  24 ],  rsi
+        mov  [ rdi +  32 ],  rsi
+        mov  [ rdi +  40 ],  rsi
+        mov  [ rdi +  48 ],  rsi
+        mov  [ rdi +  56 ],  rsi
+        
+        ; Advances the memory pointer and decreases the number of bytes to write
+        add     rdi,            64
+        sub     rdx,            64
+        
+        ; Next bytes - Writes 64 bytes at a time, if possible
+        cmp     rdx,            64
+        jge     .aligned_64
+        
+        ; Next bytes - Writes 32 bytes at a time, if possible
+        cmp     rdx,            32
+        jge     .aligned_32
+        
+        ; Next bytes - Writes 16 bytes at a time, if possible
+        cmp     rdx,            16
+        jge     .aligned_16
+        
+        ; Checks if we're done writing bytes
+        cmp     rdx,            0
+        je      .end
+        
+        ; If we still have byte to write, writes them one by one
+        jmp     .aligned_end
+        
+    .aligned_32:
+        
+        ; Writes 32 bytes into the memory buffer
+        mov  [ rdi       ],  rsi
+        mov  [ rdi +   8 ],  rsi
+        mov  [ rdi +  16 ],  rsi
+        mov  [ rdi +  24 ],  rsi
+        
+        ; Advances the memory pointer and decreases the number of bytes to write
+        add     rdi,            32
+        sub     rdx,            32
+        
+        ; Next bytes - Writes 32 bytes at a time, if possible
+        cmp     rdx,            32
+        jge     .aligned_32
+        
+        ; Next bytes - Writes 16 bytes at a time, if possible
+        cmp     rdx,            16
+        jge     .aligned_16
+        
+        ; Checks if we're done writing bytes
+        cmp     rdx,            0
+        je      .end
+        
+        ; If we still have byte to write, writes them one by one
+        jmp     .aligned_end
+        
+    .aligned_16:
+        
+        ; Writes 16 bytes into the memory buffer
+        mov  [ rdi       ],  rsi
+        mov  [ rdi +   8 ],  rsi
+        
+        ; Advances the memory pointer and decreases the number of bytes to write
+        add     rdi,            16
+        sub     rdx,            16
+        
+        ; Next bytes - Writes 16 bytes at a time, if possible
+        cmp     rdx,            16
+        jge     .aligned
+        
+        ; Checks if we're done writing bytes
+        cmp     rdx,            0
+        je      .end
+        
+        ; If we still have byte to write, writes them one by one
+        jmp     .aligned_end
+    
+    .end:
+        
+        ; Return value - Gets the original pointer
+        mov     rax,            r8
+        
+        ret
