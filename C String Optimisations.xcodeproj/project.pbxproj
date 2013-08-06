@@ -12,6 +12,12 @@
 		0548EF3E17B03565003E22B7 /* strlen.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = strlen.c; sourceTree = "<group>"; };
 		0548EF3F17B03565003E22B7 /* strlen.32.s */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.asm; path = strlen.32.s; sourceTree = "<group>"; };
 		0548EF4017B03565003E22B7 /* strlen.64.s */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.asm; path = strlen.64.s; sourceTree = "<group>"; };
+		056F07AE17B0F33D00163F30 /* memchr.32.s */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.asm; path = memchr.32.s; sourceTree = "<group>"; };
+		056F07AF17B0F33D00163F30 /* memchr.64.s */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.asm; path = memchr.64.s; sourceTree = "<group>"; };
+		056F07B017B0F33D00163F30 /* memchr.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = memchr.c; sourceTree = "<group>"; };
+		056F07B117B0F33D00163F30 /* strchr.32.s */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.asm; path = strchr.32.s; sourceTree = "<group>"; };
+		056F07B217B0F33D00163F30 /* strchr.64.s */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.asm; path = strchr.64.s; sourceTree = "<group>"; };
+		056F07B317B0F33D00163F30 /* strchr.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = strchr.c; sourceTree = "<group>"; };
 		05731F8617B094100025409E /* memset.32.s */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.asm; path = memset.32.s; sourceTree = "<group>"; };
 		05731F8717B094100025409E /* memset.64.s */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.asm; path = memset.64.s; sourceTree = "<group>"; };
 		05731F8817B094100025409E /* memset.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = memset.c; sourceTree = "<group>"; };
@@ -30,12 +36,18 @@
 		0548EF3D17B03565003E22B7 /* source */ = {
 			isa = PBXGroup;
 			children = (
+				056F07AE17B0F33D00163F30 /* memchr.32.s */,
+				056F07AF17B0F33D00163F30 /* memchr.64.s */,
+				056F07B017B0F33D00163F30 /* memchr.c */,
+				056F07B117B0F33D00163F30 /* strchr.32.s */,
+				056F07B217B0F33D00163F30 /* strchr.64.s */,
+				056F07B317B0F33D00163F30 /* strchr.c */,
 				05731F8617B094100025409E /* memset.32.s */,
 				05731F8717B094100025409E /* memset.64.s */,
 				05731F8817B094100025409E /* memset.c */,
-				0548EF3E17B03565003E22B7 /* strlen.c */,
 				0548EF3F17B03565003E22B7 /* strlen.32.s */,
 				0548EF4017B03565003E22B7 /* strlen.64.s */,
+				0548EF3E17B03565003E22B7 /* strlen.c */,
 			);
 			path = source;
 			sourceTree = "<group>";

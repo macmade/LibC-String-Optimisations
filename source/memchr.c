@@ -76,7 +76,7 @@ static double __gettime()
     return t.tv_sec + t.tv_usec * 1e-6;
 }
 
-size_t xeos_strlen( const char * s );
+void * xeos_memchr( const void * s, int c, size_t n );
 
 extern int _SSE2Status;
 
@@ -85,13 +85,12 @@ int main( void )
     size_t c;
     size_t n;
     size_t i;
-    size_t j;
     char * s;
     double t1;
     double t2;
     double t3;
     
-    xeos_strlen( "" );
+    xeos_memchr( NULL, 0, 0 );
     
     start:
     
@@ -101,66 +100,50 @@ int main( void )
     printf( "---------- Testing on i386 | SSE2 = %i ----------\n", _SSE2Status );
     #endif
     
-    s = strdup( "abcdef" );
+    s = "abcdef";
     
-    printf( "    Length of '%s' with strlen:                   %zi\n", s, strlen( s ) );
-    printf( "    Length of '%s' with xeos_strlen:              %zi\n", s, xeos_strlen( s ) );
+    printf( "    memchr:                                        %p\n", memchr( s, 'f', 6 ) );
+    printf( "    xeos_memchr:                                   %p\n", xeos_memchr( s, 'f', 6 ) );
+    printf( "    memchr:                                        %p\n", memchr( s, 'f', 5 ) );
+    printf( "    xeos_memchr:                                   %p\n", xeos_memchr( s, 'f', 5 ) );
+    printf( "    memchr:                                        %p\n", memchr( s, 'g', 5 ) );
+    printf( "    xeos_memchr:                                   %p\n", xeos_memchr( s, 'g', 5 ) );
     
-    s[ 0 ] = 0;
     s++;
     
-    printf( "    Length of '%s' (misaligned) with strlen:       %zi\n", s, strlen( s ) );
-    printf( "    Length of '%s' (misaligned) with xeos_strlen:  %zi\n", s, xeos_strlen( s ) );
-    
-    for( j = 0; j < 2000; j++ )
-    {
-        s = malloc( j + 1 );
-        
-        memset( s, 'x', j );
-        
-        s[ j ] = 0;
-        
-        if( strlen( s ) != xeos_strlen( s ) )
-        {
-            printf
-            (
-                "    Warning - Length mismatch:\n"
-                "        strlen:      %zi\n"
-                "        xeos_strlen: %zi\n",
-                strlen( s ),
-                xeos_strlen( s )
-            );
-            break;
-        }
-        
-        free( s );
-    }
+    printf( "    memchr (misaligned):                           %p\n", memchr( s, 'f', 6 ) );
+    printf( "    xeos_memchr (misaligned):                      %p\n", xeos_memchr( s, 'f', 6 ) );
+    printf( "    memchr (misaligned):                           %p\n", memchr( s, 'f', 5 ) );
+    printf( "    xeos_memchr (misaligned):                      %p\n", xeos_memchr( s, 'f', 5 ) );
+    printf( "    memchr (misaligned):                           %p\n", memchr( s, 'g', 5 ) );
+    printf( "    xeos_memchr (misaligned):                      %p\n", xeos_memchr( s, 'g', 5 ) );
     
     c        = 10000000;
     n        = 1000;
     s        = malloc( n );
     s[ 999 ] = 0;
+    s[ 998 ] = 'a';
     
-    memset( s, 'x', 999 );
+    memset( s, 'x', 998 );
     
     t1 = __gettime();
     
     for( i = 0; i < c; i++ )
     {
-        strlen( s );
+        memchr( s, 'a', 1000 );
     }
     
     t2 = __gettime();
     
     for( i = 0; i < c; i++ )
     {
-        xeos_strlen( s );
+        xeos_memchr( s, 'a', 1000 );
     }
     
     t3 = __gettime();
     
-    printf( "    %zi iterations - time of strlen:             %f\n", c, t2 - t1 );
-    printf( "    %zi iterations - time of xeos_strlen:        %f\n", c, t3 - t2 );
+    printf( "    %zi iterations - time of memchr:          %f\n", c, t2 - t1 );
+    printf( "    %zi iterations - time of xeos_memchr:     %f\n", c, t3 - t2 );
     
     free( s );
     
