@@ -34,8 +34,8 @@ Test consists of **10000000** (10 millions) calls to `memset()` with a 4096 byes
     OS X memset() / 64bits:				0.906685 seconds
     XEOS memset() / 64bits:				0.778556 seconds	<-- Best result
     
-    OS X memset() / 32bits: 		  	0.869590
-    XEOS memset() / 32bits:    			N/A (not developed yet)
+    OS X memset() / 32bits: 		  	0.869590 seconds
+    XEOS memset() / 32bits:    			0.798635 seconds    <-- Best result
     
 License
 -------
