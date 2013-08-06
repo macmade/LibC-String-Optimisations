@@ -12,6 +12,35 @@ If not, less-optimised versions will be used.
 
 Source code is written in **assembly**, with a test C file for each function, benchmarking it versus the system implementation.
 
+Some numbers
+------------
+
+Here are a few benchmark results, compared to the C library implementation of **OS X 10.9** (which is also heavily optimised):
+
+### 1 - strlen()
+
+Test consists of **10000000** (10 millions) calls to `strlen()` with a 1000 characters string:
+
+    OS X strlen() / 64bits:				0.531318 seconds
+    XEOS strlen() / 64bits - SSE2:		0.527532 seconds
+    XEOS strlen() / 64bits:				3.850802 seconds
+    
+    OS X strlen() / 32bits: 		  	0.610977 seconds
+    XEOS strlen() / 32bits - SSE2:    	0.607162 seconds
+    XEOS strlen() / 32bits: 		  	4.185022 seconds
+    
+### 2 - memset()
+
+Test consists of **10000000** (10 millions) calls to `memset()` with a 4096 byes buffer:
+
+    OS X memset() / 64bits:				0.906685 seconds
+    XEOS memset() / 64bits - SSE2:		0.778556 seconds
+    XEOS memset() / 64bits:				N/A (not developed yet)
+    
+    OS X memset() / 32bits: 		  	0.869590
+    XEOS memset() / 32bits - SSE2:    	N/A (not developed yet)
+    XEOS memset() / 32bits: 		  	N/A (not developed yet)
+    
 License
 -------
 
