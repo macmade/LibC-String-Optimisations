@@ -135,7 +135,7 @@ _xeos_memset:
         mov     rcx,    r8
         mov     rdx,    r9
         
-        ; Sets the SSE2 status flag for the next calls and process the string
+        ; Sets the SSE2 status flag for the next calls and fills the buffer
         ; with the optimized version of memset()
         mov QWORD [ rel __SSE2Status ], 1
         jmp _memset64_sse2
@@ -147,7 +147,7 @@ _xeos_memset:
         mov     rcx,    r8
         mov     rdx,    r9
         
-        ; Sets the SSE2 status flag for the next calls and process the string
+        ; Sets the SSE2 status flag for the next calls and fills the buffer
         ; with the less-optimized version of memset()
         mov QWORD [ rel __SSE2Status ], 0
         jmp _memset64
@@ -207,7 +207,7 @@ _memset64_sse2:
         ; so we can safelfy use the SSE instructions
         and     rdi,        -16
         
-        ; Gets the number of misaligned bytes in the original string pointer (R8)
+        ; Gets the number of misaligned bytes in the original memory pointer (R8)
         mov     rax,        r8
         sub     rax,        rdi
         
@@ -449,7 +449,7 @@ _memset64:
         ; Aligns the memory pointer in RDI to a 8-byte boundary
         and     rdi,        -8
         
-        ; Gets the number of misaligned bytes in the original string pointer (R8)
+        ; Gets the number of misaligned bytes in the original memory pointer (R8)
         mov     rax,        r8
         sub     rax,        rdi
         
@@ -484,7 +484,7 @@ _memset64:
         inc     rdi
         
         ; Decreases the number of bytes to write (RDX is the total, RCX is the
-        ; number of bytes to write until we're aligned to a 16-byte boundary)
+        ; number of bytes to write until we're aligned to a 8-byte boundary)
         dec     rcx
         dec     rdx
         
@@ -496,15 +496,15 @@ _memset64:
         
     .aligned:
         
-        ; Writes 8 bytes at a time, if possible
+        ; Writes 128 bytes at a time, if possible
         cmp     rdx,        128
         jge     .aligned_128
         
-        ; Writes 4 bytes at a time, if possible
+        ; Writes 64 bytes at a time, if possible
         cmp     rdx,        64
         jge     .aligned_64
         
-        ; Writes 3 bytes at a time, if possible
+        ; Writes 32 bytes at a time, if possible
         cmp     rdx,        32
         jge     .aligned_32
     
@@ -515,7 +515,7 @@ _memset64:
     .aligned_end:
         
         ; We're aligned on a 8-byte boundary, but there's not enough bytes
-        ; to writ, so writes the remaining bytes one by one
+        ; to write, so writes the remaining bytes one by one
         mov     rcx,            rdx
         mov     rax,            rsi
         jmp     .notaligned_loop
