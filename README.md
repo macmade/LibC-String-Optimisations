@@ -4,7 +4,7 @@ C String Optimisations
 About
 -----
 
-**Heavily optimised** versions of the string functions from the C standard library, for x86 and x86_64, developed for the [XEOS Operating System](http://www.xs-labs.com/en/projects/xeos/).
+**Heavily optimised** versions of the string functions from the C standard library, for x86 and x86_64 platforms, developed for the [XEOS Operating System](http://www.xs-labs.com/en/projects/xeos/).
 
 **32** and **64** bits versions are available.  
 When applicable, and if the CPU supports it, the functions will take advantage of the **SSE2 instruction** set.  
@@ -22,24 +22,20 @@ Here are a few benchmark results, compared to the C library implementation of **
 Test consists of **10000000** (10 millions) calls to `strlen()` with a 1000 characters string:
 
     OS X strlen() / 64bits:				0.531318 seconds
-    XEOS strlen() / 64bits - SSE2:		0.527532 seconds
-    XEOS strlen() / 64bits:				3.850802 seconds
+    XEOS strlen() / 64bits:				0.527532 seconds	<-- Best result
     
     OS X strlen() / 32bits: 		  	0.610977 seconds
-    XEOS strlen() / 32bits - SSE2:    	0.607162 seconds
-    XEOS strlen() / 32bits: 		  	4.185022 seconds
+    XEOS strlen() / 32bits:    			0.607162 seconds	<-- Best result
     
 ### 2 - memset()
 
 Test consists of **10000000** (10 millions) calls to `memset()` with a 4096 byes buffer:
 
     OS X memset() / 64bits:				0.906685 seconds
-    XEOS memset() / 64bits - SSE2:		0.778556 seconds
-    XEOS memset() / 64bits:				N/A (not developed yet)
+    XEOS memset() / 64bits:				0.778556 seconds	<-- Best result
     
     OS X memset() / 32bits: 		  	0.869590
-    XEOS memset() / 32bits - SSE2:    	N/A (not developed yet)
-    XEOS memset() / 32bits: 		  	N/A (not developed yet)
+    XEOS memset() / 32bits:    			N/A (not developed yet)
     
 License
 -------
