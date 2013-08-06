@@ -91,11 +91,11 @@ global _xeos_memset
 ; 
 ; Return registers:
 ;       
-;       - RAX:      The memory pointer
+;       - EAX:      The memory pointer
 ; 
 ; Killed registers:
 ;       
-;       None - __cdecl (all except RAX, RCX, RDX must be preserved)
+;       None - __cdecl (all except EAX, ECX, EDX must be preserved)
 ;-------------------------------------------------------------------------------
 _xeos_memset:
     
@@ -149,11 +149,11 @@ _xeos_memset:
 ; 
 ; Return registers:
 ;       
-;       - RAX:      The memory pointer
+;       - EAX:      The memory pointer
 ; 
 ; Killed registers:
 ;       
-;       None - __cdecl (all except RAX, RCX, RDX must be preserved)
+;       None - __cdecl (all except EAX, ECX, EDX must be preserved)
 ;-------------------------------------------------------------------------------
 _memset32_sse2:
     
@@ -417,11 +417,11 @@ _memset32_sse2:
 ; 
 ; Return registers:
 ;       
-;       - RAX:      The memory pointer
+;       - EAX:      The memory pointer
 ; 
 ; Killed registers:
 ;       
-;       None - __cdecl (all except RAX, RCX, RDX must be preserved)
+;       None - __cdecl (all except EAX, ECX, EDX must be preserved)
 ;-------------------------------------------------------------------------------
 _memset32:
     

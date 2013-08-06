@@ -73,7 +73,7 @@ global __SSE2Status
 ;   -1: Unchecked
 ;    0: SSE2 not available
 ;    1: SSE2 available
-__SSE2Status:   dd  -1
+__SSE2Status:   dq  -1
 
 section .text
 

@@ -91,11 +91,11 @@ global _xeos_strlen
 ; 
 ; Return registers:
 ;       
-;       - RAX:      The length of the string pointed by RDI
+;       - EAX:      The length of the string
 ; 
 ; Killed registers:
 ;       
-;       None - __cdecl (all except RAX, RCX, RDX must be preserved)
+;       None - __cdecl (all except EAX, ECX, EDX must be preserved)
 ;-------------------------------------------------------------------------------
 _xeos_strlen:
     
@@ -149,11 +149,11 @@ _xeos_strlen:
 ; 
 ; Return registers:
 ;       
-;       - RAX:      The length of the string pointed by RDI
+;       - EAX:      The length of the string
 ; 
 ; Killed registers:
 ;       
-;       None - __cdecl (all except RAX, RCX, RDX must be preserved)
+;       None - __cdecl (all except EAX, ECX, EDX must be preserved)
 ;-------------------------------------------------------------------------------
 _strlen32_sse2:
     
@@ -252,11 +252,11 @@ _strlen32_sse2:
 ; 
 ; Return registers:
 ;       
-;       - RAX:      The length of the string pointed by RDI
+;       - EAX:      The length of the string
 ; 
 ; Killed registers:
 ;       
-;       None - __cdecl (all except RAX, RCX, RDX must be preserved)
+;       None - __cdecl (all except EAX, ECX, EDX must be preserved)
 ;-------------------------------------------------------------------------------   
 _strlen32:
     
