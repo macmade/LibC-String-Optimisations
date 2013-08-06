@@ -91,7 +91,8 @@ global _xeos_memchr
 ; 
 ; Return registers:
 ;       
-;       - EAX:      The length of the string
+;       - EAX:      A pointer to the first occurence of the character in the
+;                   buffer, or 0 (NULL)
 ; 
 ; Killed registers:
 ;       
@@ -149,7 +150,8 @@ _xeos_memchr:
 ; 
 ; Return registers:
 ;       
-;       - EAX:      The length of the string
+;       - EAX:      A pointer to the first occurence of the character in the
+;                   buffer, or 0 (NULL)
 ; 
 ; Killed registers:
 ;       
@@ -170,7 +172,8 @@ _memchr32_sse2:
 ; 
 ; Return registers:
 ;       
-;       - EAX:      The length of the string
+;       - EAX:      A pointer to the first occurence of the character in the
+;                   buffer, or 0 (NULL)
 ; 
 ; Killed registers:
 ;       

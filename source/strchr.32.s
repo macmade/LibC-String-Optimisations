@@ -91,7 +91,8 @@ global _xeos_strchr
 ; 
 ; Return registers:
 ;       
-;       - EAX:      The memory pointer
+;       - EAX:      A pointer to the first occurence of the character in the
+;                   string, or 0 (NULL)
 ; 
 ; Killed registers:
 ;       
@@ -149,7 +150,8 @@ _xeos_strchr:
 ; 
 ; Return registers:
 ;       
-;       - EAX:      The memory pointer
+;       - EAX:      A pointer to the first occurence of the character in the
+;                   string, or 0 (NULL)
 ; 
 ; Killed registers:
 ;       
@@ -170,7 +172,8 @@ _strchr32_sse2:
 ; 
 ; Return registers:
 ;       
-;       - EAX:      The memory pointer
+;       - EAX:      A pointer to the first occurence of the character in the
+;                   string, or 0 (NULL)
 ; 
 ; Killed registers:
 ;       

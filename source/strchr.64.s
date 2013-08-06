@@ -87,13 +87,13 @@ global _xeos_strchr
 ; 
 ; Input registers:
 ;       
-;       - RDI:      The memory pointer
-;       - RSI:      The character to repeat
-;       - RDX:      The number of characters to set
+;       - RDI:      The string pointer
+;       - RSI:      The character to search
 ; 
 ; Return registers:
 ;       
-;       - RAX:      The memory pointer
+;       - RAX:      A pointer to the first occurence of the character in the
+;                   string, or 0 (NULL)
 ; 
 ; Killed registers:
 ;       
@@ -159,13 +159,13 @@ _xeos_strchr:
 ; 
 ; Input registers:
 ;       
-;       - RDI:      The memory pointer
-;       - RSI:      The character to repeat
-;       - RDX:      The number of characters to set
+;       - RDI:      The string pointer
+;       - RSI:      The character to search
 ; 
 ; Return registers:
 ;       
-;       - RAX:      The memory pointer
+;       - RAX:      A pointer to the first occurence of the character in the
+;                   string, or 0 (NULL)
 ; 
 ; Killed registers:
 ;       
@@ -182,13 +182,13 @@ _strchr64_sse2:
 ; 
 ; Input registers:
 ;       
-;       - RDI:      The memory pointer
-;       - RSI:      The character to repeat
-;       - RDX:      The number of characters to set
+;       - RDI:      The string pointer
+;       - RSI:      The character to search
 ; 
 ; Return registers:
 ;       
-;       - RAX:      The memory pointer
+;       - RAX:      A pointer to the first occurence of the character in the
+;                   string, or 0 (NULL)
 ; 
 ; Killed registers:
 ;       

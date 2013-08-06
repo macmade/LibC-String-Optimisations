@@ -87,11 +87,14 @@ global _xeos_memchr
 ; 
 ; Input registers:
 ;       
-;       - RDI:      The string pointer
+;       - RDI:      The memory pointer
+;       - RSI:      The character to search
+;       - RDX:      The size of the memory buffer
 ; 
 ; Return registers:
 ;       
-;       - RAX:      The length of the string pointed by RDI
+;       - RAX:      A pointer to the first occurence of the character in the
+;                   buffer, or 0 (NULL)
 ; 
 ; Killed registers:
 ;       
@@ -159,11 +162,14 @@ _xeos_memchr:
 ; 
 ; Input registers:
 ;       
-;       - RDI:      The string pointer
+;       - RDI:      The memory pointer
+;       - RSI:      The character to search
+;       - RDX:      The size of the memory buffer
 ; 
 ; Return registers:
 ;       
-;       - RAX:      The length of the string pointed by RDI
+;       - RAX:      A pointer to the first occurence of the character in the
+;                   buffer, or 0 (NULL)
 ; 
 ; Killed registers:
 ;       
@@ -180,11 +186,14 @@ _memchr64_sse2:
 ; 
 ; Input registers:
 ;       
-;       - RDI:      The string pointer
+;       - RDI:      The memory pointer
+;       - RSI:      The character to search
+;       - RDX:      The size of the memory buffer
 ; 
 ; Return registers:
 ;       
-;       - RAX:      The length of the string pointed by RDI
+;       - RAX:      A pointer to the first occurence of the character in the
+;                   buffer, or 0 (NULL)
 ; 
 ; Killed registers:
 ;       
