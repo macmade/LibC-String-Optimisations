@@ -282,7 +282,7 @@ _memset64_sse2:
     .aligned_128:
         
         ; Writes 128 bytes into the memory buffer
-        movdqa  [ rdi       ], xmm0
+        movdqa  [ rdi       ],  xmm0
         movdqa  [ rdi +  16 ],  xmm0
         movdqa  [ rdi +  32 ],  xmm0
         movdqa  [ rdi +  48 ],  xmm0
@@ -321,7 +321,7 @@ _memset64_sse2:
     .aligned_64:
         
         ; Writes 64 bytes into the memory buffer
-        movdqa  [ rdi      ], xmm0
+        movdqa  [ rdi      ],   xmm0
         movdqa  [ rdi + 16 ],   xmm0
         movdqa  [ rdi + 32 ],   xmm0
         movdqa  [ rdi + 48 ],   xmm0
@@ -352,7 +352,7 @@ _memset64_sse2:
     .aligned_32:
         
         ; Writes 32 bytes into the memory buffer
-        movdqa  [ rdi      ], xmm0
+        movdqa  [ rdi      ],   xmm0
         movdqa  [ rdi + 16 ],   xmm0
         
         ; Advances the memory pointer and decreases the number of bytes to write
