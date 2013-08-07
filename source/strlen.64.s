@@ -98,8 +98,6 @@ global _xeos_strlen
 ;       None - System V AMD64 ABI (RBP, RBX, R12-R15 must be preserved)
 ;-------------------------------------------------------------------------------
 _xeos_strlen:
-
-.start:
     
     ; Checks the status of the SSE2 flag
     cmp QWORD [ rel __SSE2Status ], 1
