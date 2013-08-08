@@ -160,7 +160,7 @@ _memset32_sse2:
     ; Creates a stack frame, so we can save registers, making them available
     ; to use. Otherwise, only 3 registers are safe, which is not enough here
     push    ebp
-    mov     ebp, esp
+    mov     ebp,        esp
     
     ; Saves EDI, ESI and EBX as we are going to use them
     push    edi
@@ -428,7 +428,7 @@ _memset32:
     ; Creates a stack frame, so we can save registers, making them available
     ; to use. Otherwise, only 3 registers are safe, which is not enough here
     push    ebp
-    mov     ebp, esp
+    mov     ebp,        esp
     
     ; Saves EDI, ESI and EBX as we are going to use them
     push    edi
