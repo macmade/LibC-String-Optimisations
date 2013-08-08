@@ -159,7 +159,210 @@ _xeos_memchr:
 ;-------------------------------------------------------------------------------
 _memchr32_sse2:
     
-    ret
+    ; Creates a stack frame, so we can save registers, making them available
+    ; to use. Otherwise, only 3 registers are safe, which is not enough here
+    push    ebp
+    mov     ebp,        esp
+    
+    ; Saves EDI, ESI and EBX as we are going to use them
+    push    edi
+    push    esi
+    push    ebx
+    
+    ; Gets the arguments from the stack
+    mov     edi,        [ ebp +  8 ]
+    mov     esi,        [ ebp + 12 ]
+    mov     edx,        [ ebp + 16 ]
+    
+    ; Checks for a NULL buffer
+    test        edi,    edi
+    jz          .null
+    
+    ; Checks for a zero size
+    test        edx,    edx
+    jz          .null
+    
+    ; Ensures the character to search is 8 bits, and stores it in XMM0
+    and         esi,    0xFF
+    movd        xmm0,   esi
+    
+    ; Stores the original memory pointer in ESI
+    mov         esi,    edi
+    
+    ; Aligns the memory pointer in EDI to a 16-byte boundary,
+    ; so we can safelfy use the SSE instructions
+    and         edi,    -16
+    
+    ; Prepares XMM0's value so we can search for the character using pcmpeqb
+	punpcklbw   xmm0,   xmm0
+	punpcklbw   xmm0,   xmm0
+	pshufd      xmm0,   xmm0,   0
+    
+    ; Compares 16 bytes from EDI with the character to search (in XMM0)
+    ; Equal bytes will be set to all 1s in XMM1, others to all 0s
+	movdqa      xmm1,   [ edi ]
+	pcmpeqb     xmm1,   xmm0
+    
+    ; Gets a mask in EBX with bits set to the most significant
+    ; bits of each bytes from XMM1
+	pmovmskb    ebx,    xmm1
+    
+    ; Gets the number of misaligned bytes in the original memory pointer (ESI)
+    mov         ecx,    esi
+    sub         ecx,    edi
+    
+    ; As we aligned the memory pointer in EDI to a 16-byte boundary,
+    ; any preceding byte has to be ignored.
+    ; So let's create a mask for those bytes in EAX, based on the number of
+    ; misaligned bytes in the original memory pointer (ECX)
+    xor         eax,    eax
+    not         eax
+    shl         eax,    cl
+    
+    ; As we may read more bytes, depending on the alignment, adjusts the buffer
+    ; size in EDX
+    add         edx,    ecx
+    
+    ; Masks the unwanted bytes in EBX, and checks if the character was found
+    and         ebx,    eax
+    jnz         .found
+    
+    .notfound:
+        
+        ; We've read 16 bytes - Advances the memory pointer and decrease
+        ; the buffer size
+        add         edi,    16
+        sub         edx,    16
+        
+        ; Checks if we've reached the buffer size limit
+        cmp         edx,    0
+        jle         .null
+        
+        ; Checks if we can read 64 bytes at a time - if not, 16 bytes at a
+        ; time will be read
+        cmp         edx,    64
+        jl .notfound_16
+        
+    .notfound_64:
+        
+        ; Reads the next 64 bytes from EDI into the XMM registers
+        movdqa      xmm1,   [ edi ]
+        movdqa      xmm2,   [ edi + 16 ]
+        movdqa      xmm3,   [ edi + 32 ]
+        movdqa      xmm4,   [ edi + 64 ]
+        
+        ; Compares the 64 bytes read with the character to search (in XMM0)
+        ; Equal bytes will be set to all 1s in the XMM reisters, others to all 0s
+        pcmpeqb     xmm1,   xmm0
+        pcmpeqb     xmm2,   xmm0
+        pcmpeqb     xmm3,   xmm0
+        pcmpeqb     xmm4,   xmm0
+        
+        ; Gets a mask in EBX with bits set to the most significant
+        ; bits of each bytes from XMM1
+        pmovmskb    ebx,    xmm1
+        
+        ; Checks if a bit is set, meaning the character was found
+        test        ebx,    ebx
+        jnz         .found
+        
+        ; Checks the next 16 bytes - Advances the memory pointer and decrease
+        ; the buffer size
+        add         edi,    16
+        sub         edx,    16
+        
+        ; Gets a mask in EBX with bits set to the most significant
+        ; bits of each bytes from XMM2
+        pmovmskb    ebx,    xmm2
+        
+        ; Checks if a bit is set, meaning the character was found
+        test        ebx,    ebx
+        jnz         .found
+        
+        ; Checks the next 16 bytes - Advances the memory pointer and decrease
+        ; the buffer size
+        add         edi,    16
+        sub         edx,    16
+        
+        ; Gets a mask in EBX with bits set to the most significant
+        ; bits of each bytes from XMM3
+        pmovmskb    ebx,    xmm3
+        
+        ; Checks if a bit is set, meaning the character was found
+        test        ebx,    ebx
+        jnz         .found
+        
+        ; Checks the next 16 bytes - Advances the memory pointer and decrease
+        ; the buffer size
+        add         edi,    16
+        sub         edx,    16
+        
+        ; Gets a mask in EBX with bits set to the most significant
+        ; bits of each bytes from XMM4
+        pmovmskb    ebx,    xmm4
+        
+        ; Checks if a bit is set, meaning the character was found
+        test        ebx,    ebx
+        jnz         .found
+        
+        ; Not found - Continues scanning
+        jmp         .notfound
+        
+    .notfound_16:
+        
+        ; Compares 16 bytes from EDI with the character to search (in XMM0)
+        ; Equal bytes will be set to all 1s in XMM1, others to all 0s
+        movdqa      xmm1,   [ edi ]
+        pcmpeqb     xmm1,   xmm0
+        
+        ; Gets a mask in EBX with bits set to the most significant
+        ; bits of each bytes from XMM1
+        pmovmskb    ebx,    xmm1
+        
+        ; Checks if a bit is set, meaning the character was found
+        test        ebx,    ebx
+        jnz         .found
+        
+        ; Not found - Continues scanning
+        jmp         .notfound
+        
+    .found:
+        
+        ; Gets the index of the first bit set in EAX
+        ; (index of the found character)
+        bsf         eax,    ebx
+        
+        ; Substracts the character index from the remaining buffer size
+        sub         edx,    eax
+        
+        ; Checks if we've reached the buffer size limit
+        cmp         edx,    0
+        jle         .null
+        
+        ; Adds the character index to the current value of the memory pointer,
+        ; so we'll return the memory location to the found character
+        add         eax,    edi
+        
+        ; Restores saved registers
+        pop         ebx
+        pop         esi
+        pop         edi
+        pop         ebp
+        
+        ret
+        
+    .null:
+        
+        ; Returns NULL
+        xor         eax,    eax
+        
+        ; Restores saved registers
+        pop         ebx
+        pop         esi
+        pop         edi
+        pop         ebp
+        
+        ret
 
 ;-------------------------------------------------------------------------------
 ; 32-bits optimized memchr() function
