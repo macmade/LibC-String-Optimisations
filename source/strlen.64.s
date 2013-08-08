@@ -205,7 +205,7 @@ _strlen64_sse2:
     
     .found:
         
-        ; Gets the index of the first bit set in EAX
+        ; Gets the index of the first bit set in RAX
         ; (index of the found 0-byte)
         bsf         rax,    rdx
         

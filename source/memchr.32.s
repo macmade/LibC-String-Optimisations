@@ -126,7 +126,7 @@ _xeos_memchr:
     ; SSE2 available
     .ok:
         
-        ; Sets the SSE2 status flag for the next calls and process the string
+        ; Sets the SSE2 status flag for the next calls and process the buffer
         ; with the optimized version of memchr()
         mov DWORD [ ds:__SSE2Status ], 1
         jmp _memchr32_sse2
@@ -134,7 +134,7 @@ _xeos_memchr:
     ; SSE2 not available
     .fail:
         
-        ; Sets the SSE2 status flag for the next calls and process the string
+        ; Sets the SSE2 status flag for the next calls and process the buffer
         ; with the less-optimized version of memchr()
         mov DWORD [ ds:__SSE2Status ], 0
         jmp _memchr32
