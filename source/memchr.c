@@ -100,6 +100,13 @@ int main( void )
     printf( "---------- Testing on i386 | SSE2 = %i ----------\n", _SSE2Status );
     #endif
     
+    s = "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaabcdef";
+    
+    printf( "    memchr:                                        %p\n", memchr( s, 'f', 106 ) );
+    printf( "    xeos_memchr:                                   %p\n", xeos_memchr( s, 'f', 106 ) );
+    printf( "    memchr:                                        %p\n", memchr( s, 'f', 104 ) );
+    printf( "    xeos_memchr:                                   %p\n", xeos_memchr( s, 'f', 104 ) );
+    
     s = "abcdef";
     
     printf( "    memchr:                                        %p\n", memchr( s, 'f', 6 ) );

@@ -192,7 +192,7 @@ _memchr64_sse2:
     ; Stores the original memory pointer in RSI
     mov         rsi,    rdi
     
-    ; Aligns the string pointer in RDI to a 16-byte boundary,
+    ; Aligns the memory pointer in RDI to a 16-byte boundary,
     ; so we can safelfy use the SSE instructions
     and         rdi,    -16
     
@@ -210,14 +210,14 @@ _memchr64_sse2:
     ; bits of each bytes from XMM1
 	pmovmskb    r8,     xmm1
     
-    ; Gets the number of misaligned bytes in the original string pointer (RSI)
+    ; Gets the number of misaligned bytes in the original memory pointer (RSI)
     mov         rcx,    rsi
     sub         rcx,    rdi
     
     ; As we aligned the memory pointer in RDI to a 16-byte boundary,
     ; any preceding byte has to be ignored.
     ; So let's create a mask for those bytes in RAX, based on the number of
-    ; misaligned bytes in the original string pointer (RCX)
+    ; misaligned bytes in the original memory pointer (RCX)
     xor         rax,    rax
     not         rax
     shl         rax,    cl
@@ -242,7 +242,7 @@ _memchr64_sse2:
         jle         .null
         
         ; Checks if we can read 64 bytes at a time - if not, 16 bytes at a
-        ;time will be read
+        ; time will be read
         cmp         rdx,    64
         jl          .notfound_16
         
