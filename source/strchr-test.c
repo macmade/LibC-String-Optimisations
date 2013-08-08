@@ -61,13 +61,108 @@
 
 /* $Id$ */
 
+#include <stdio.h>
+#include <sys/time.h>
 #include <stdlib.h>
+#include <string.h>
 
-char * xeos_strchr_c( const char * s, int c );
-char * xeos_strchr_c( const char * s, int c )
+static double __gettime()
 {
-    ( void )s;
-    ( void )c;
+    struct timeval  t;
+    struct timezone tzp;
     
-    return NULL;
+    gettimeofday( &t, &tzp );
+    
+    return t.tv_sec + t.tv_usec * 1e-6;
+}
+
+char * xeos_strchr( const char * s, int c );
+char * xeos_strchr_c( const char * s, int c );
+
+extern int _SSE2Status;
+
+int main( void )
+{
+    size_t c;
+    size_t n;
+    size_t i;
+    char * s;
+    double t1;
+    double t2;
+    double t3;
+    double t4;
+    
+    xeos_strchr( "", 'x' );
+    
+    start:
+    
+    #ifdef __LP64__
+    printf( "---------- Testing on x86_64 | SSE2 = %i ----------\n", _SSE2Status );
+    #else
+    printf( "---------- Testing on i386 | SSE2 = %i ----------\n", _SSE2Status );
+    #endif
+    
+    s = "abcdef";
+    
+    printf( "    strchr:                                        %p\n", strchr( s, 'f' ) );
+    printf( "    xeos_strchr:                                   %p\n", xeos_strchr( s, 'f' ) );
+    printf( "    xeos_strchr_c:                                 %p\n", xeos_strchr_c( s, 'f' ) );
+    printf( "    strchr:                                        %p\n", strchr( s, 'g' ) );
+    printf( "    xeos_strchr:                                   %p\n", xeos_strchr( s, 'g' ) );
+    printf( "    xeos_strchr_c:                                 %p\n", xeos_strchr_c( s, 'g' ) );
+    
+    s++;
+    
+    printf( "    strchr (misaligned):                           %p\n", strchr( s, 'f' ) );
+    printf( "    xeos_strchr (misaligned):                      %p\n", xeos_strchr( s, 'f' ) );
+    printf( "    xeos_strchr_c (misaligned):                    %p\n", xeos_strchr_c( s, 'f' ) );
+    printf( "    strchr (misaligned):                           %p\n", strchr( s, 'g' ) );
+    printf( "    xeos_strchr (misaligned):                      %p\n", xeos_strchr( s, 'g' ) );
+    printf( "    xeos_strchr_c (misaligned):                    %p\n", xeos_strchr_c( s, 'g' ) );
+    
+    c        = 10000000;
+    n        = 1000;
+    s        = malloc( n );
+    s[ 999 ] = 0;
+    s[ 998 ] = 'a';
+    
+    memset( s, 'x', 998 );
+    
+    t1 = __gettime();
+    
+    for( i = 0; i < c; i++ )
+    {
+        strchr( s, 'a' );
+    }
+    
+    t2 = __gettime();
+    
+    for( i = 0; i < c; i++ )
+    {
+        xeos_strchr( s, 'a' );
+    }
+    
+    t3 = __gettime();
+    
+    for( i = 0; i < c; i++ )
+    {
+        xeos_strchr_c( s, 'a' );
+    }
+    
+    t4 = __gettime();
+    
+    printf( "    %zi iterations - time of strchr:          %f\n", c, t2 - t1 );
+    printf( "    %zi iterations - time of xeos_strchr:     %f\n", c, t3 - t2 );
+    printf( "    %zi iterations - time of xeos_strchr_c:   %f\n", c, t4 - t3 );
+    
+    free( s );
+    
+    if( _SSE2Status == 1 )
+    {
+        _SSE2Status = 0;
+        
+        goto start;
+    }
+    
+    return 0;
 }

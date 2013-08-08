@@ -61,115 +61,12 @@
 
 /* $Id$ */
 
-#include <stdio.h>
-#include <sys/time.h>
 #include <stdlib.h>
-#include <string.h>
 
-static double __gettime()
+size_t xeos_strlen_c( const char * s );
+size_t xeos_strlen_c( const char * s )
 {
-    struct timeval  t;
-    struct timezone tzp;
-    
-    gettimeofday( &t, &tzp );
-    
-    return t.tv_sec + t.tv_usec * 1e-6;
-}
-
-size_t xeos_strlen( const char * s );
-
-extern int _SSE2Status;
-
-int main( void )
-{
-    size_t c;
-    size_t n;
-    size_t i;
-    size_t j;
-    char * s;
-    double t1;
-    double t2;
-    double t3;
-    
-    xeos_strlen( "" );
-    
-    start:
-    
-    #ifdef __LP64__
-    printf( "---------- Testing on x86_64 | SSE2 = %i ----------\n", _SSE2Status );
-    #else
-    printf( "---------- Testing on i386 | SSE2 = %i ----------\n", _SSE2Status );
-    #endif
-    
-    s = strdup( "abcdef" );
-    
-    printf( "    Length of '%s' with strlen:                   %zi\n", s, strlen( s ) );
-    printf( "    Length of '%s' with xeos_strlen:              %zi\n", s, xeos_strlen( s ) );
-    
-    s[ 0 ] = 0;
-    s++;
-    
-    printf( "    Length of '%s' (misaligned) with strlen:       %zi\n", s, strlen( s ) );
-    printf( "    Length of '%s' (misaligned) with xeos_strlen:  %zi\n", s, xeos_strlen( s ) );
-    
-    for( j = 0; j < 2000; j++ )
-    {
-        s = malloc( j + 1 );
-        
-        memset( s, 'x', j );
-        
-        s[ j ] = 0;
-        
-        if( strlen( s ) != xeos_strlen( s ) )
-        {
-            printf
-            (
-                "    Warning - Length mismatch:\n"
-                "        strlen:      %zi\n"
-                "        xeos_strlen: %zi\n",
-                strlen( s ),
-                xeos_strlen( s )
-            );
-            break;
-        }
-        
-        free( s );
-    }
-    
-    c        = 10000000;
-    n        = 1000;
-    s        = malloc( n );
-    s[ 999 ] = 0;
-    
-    memset( s, 'x', 999 );
-    
-    t1 = __gettime();
-    
-    for( i = 0; i < c; i++ )
-    {
-        strlen( s );
-    }
-    
-    t2 = __gettime();
-    
-    for( i = 0; i < c; i++ )
-    {
-        xeos_strlen( s );
-    }
-    
-    t3 = __gettime();
-    
-    printf( "    %zi iterations - time of strlen:             %f\n", c, t2 - t1 );
-    printf( "    %zi iterations - time of xeos_strlen:        %f\n", c, t3 - t2 );
-    
-    free( s );
-    
-    if( _SSE2Status == 1 )
-    {
-        _SSE2Status = 0;
-        
-        goto start;
-    }
+    ( void )s;
     
     return 0;
 }

@@ -61,13 +61,140 @@
 
 /* $Id$ */
 
+#include <stdio.h>
+#include <sys/time.h>
 #include <stdlib.h>
+#include <string.h>
 
-char * xeos_strchr_c( const char * s, int c );
-char * xeos_strchr_c( const char * s, int c )
+static double __gettime()
 {
-    ( void )s;
-    ( void )c;
+    struct timeval  t;
+    struct timezone tzp;
     
-    return NULL;
+    gettimeofday( &t, &tzp );
+    
+    return t.tv_sec + t.tv_usec * 1e-6;
+}
+
+size_t xeos_strlen( const char * s );
+size_t xeos_strlen_c( const char * s );
+
+extern int _SSE2Status;
+
+int main( void )
+{
+    size_t c;
+    size_t n;
+    size_t i;
+    size_t j;
+    char * s;
+    double t1;
+    double t2;
+    double t3;
+    double t4;
+    
+    xeos_strlen( "" );
+    
+    start:
+    
+    #ifdef __LP64__
+    printf( "---------- Testing on x86_64 | SSE2 = %i ----------\n", _SSE2Status );
+    #else
+    printf( "---------- Testing on i386 | SSE2 = %i ----------\n", _SSE2Status );
+    #endif
+    
+    s = strdup( "abcdef" );
+    
+    printf( "    Length of '%s' with strlen:                      %zi\n", s, strlen( s ) );
+    printf( "    Length of '%s' with xeos_strlen:                 %zi\n", s, xeos_strlen( s ) );
+    printf( "    Length of '%s' with xeos_strlen_c:               %zi\n", s, xeos_strlen_c( s ) );
+    
+    s[ 0 ] = 0;
+    s++;
+    
+    printf( "    Length of '%s' (misaligned) with strlen:          %zi\n", s, strlen( s ) );
+    printf( "    Length of '%s' (misaligned) with xeos_strlen:     %zi\n", s, xeos_strlen( s ) );
+    printf( "    Length of '%s' (misaligned) with xeos_strlen_c:   %zi\n", s, xeos_strlen_c( s ) );
+    
+    for( j = 0; j < 2000; j++ )
+    {
+        s = malloc( j + 1 );
+        
+        memset( s, 'x', j );
+        
+        s[ j ] = 0;
+        
+        if( strlen( s ) != xeos_strlen( s ) )
+        {
+            printf
+            (
+                "    Warning - Length mismatch:\n"
+                "        strlen:      %zi\n"
+                "        xeos_strlen: %zi\n",
+                strlen( s ),
+                xeos_strlen( s )
+            );
+            break;
+        }
+        
+        if( strlen( s ) != xeos_strlen_c( s ) )
+        {
+            printf
+            (
+                "    Warning - Length mismatch:\n"
+                "        strlen:        %zi\n"
+                "        xeos_strlen_c: %zi\n",
+                strlen( s ),
+                xeos_strlen_c( s )
+            );
+            break;
+        }
+        
+        free( s );
+    }
+    
+    c        = 10000000;
+    n        = 1000;
+    s        = malloc( n );
+    s[ 999 ] = 0;
+    
+    memset( s, 'x', 999 );
+    
+    t1 = __gettime();
+    
+    for( i = 0; i < c; i++ )
+    {
+        strlen( s );
+    }
+    
+    t2 = __gettime();
+    
+    for( i = 0; i < c; i++ )
+    {
+        xeos_strlen( s );
+    }
+    
+    t3 = __gettime();
+    
+    for( i = 0; i < c; i++ )
+    {
+        xeos_strlen_c( s );
+    }
+    
+    t4 = __gettime();
+    
+    printf( "    %zi iterations - time of strlen:                %f\n", c, t2 - t1 );
+    printf( "    %zi iterations - time of xeos_strlen:           %f\n", c, t3 - t2 );
+    printf( "    %zi iterations - time of xeos_strlen_c:         %f\n", c, t4 - t3 );
+    
+    free( s );
+    
+    if( _SSE2Status == 1 )
+    {
+        _SSE2Status = 0;
+        
+        goto start;
+    }
+    
+    return 0;
 }

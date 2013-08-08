@@ -61,13 +61,99 @@
 
 /* $Id$ */
 
+#include <stdio.h>
+#include <sys/time.h>
 #include <stdlib.h>
+#include <string.h>
+#include <stdint.h>
 
-char * xeos_strchr_c( const char * s, int c );
-char * xeos_strchr_c( const char * s, int c )
+static double __gettime()
 {
-    ( void )s;
-    ( void )c;
+    struct timeval  t;
+    struct timezone tzp;
     
-    return NULL;
+    gettimeofday( &t, &tzp );
+    
+    return t.tv_sec + t.tv_usec * 1e-6;
+}
+
+void * xeos_memset( void * s, int c, size_t n );
+void * xeos_memset_c( void * s, int c, size_t n );
+
+extern int _SSE2Status;
+
+int main( void )
+{
+    size_t c;
+    size_t i;
+    char * s;
+    double t1;
+    double t2;
+    double t3;
+    double t4;
+    
+    start:
+    
+    s = calloc( 4096, 1 );
+    
+    xeos_memset( s, 0, 1 );
+    
+    #ifdef __LP64__
+    printf( "---------- Testing on x86_64 | SSE2 = %i ----------\n", _SSE2Status );
+    #else
+    printf( "---------- Testing on i386 | SSE2 = %i ----------\n", _SSE2Status );
+    #endif
+    
+    memset( s, 'a', 100 );
+    printf( "    memset      (100 x 'a'):                     %s\n", s );
+    xeos_memset( s, 'b', 100 );
+    printf( "    xeos_memset (100 x 'b'):                     %s\n", s );
+    xeos_memset_c( s, 'c', 100 );
+    printf( "    xeos_memset_c (100 x 'c'):                   %s\n", s );
+    
+    memset( s + 1, 'a', 100 );
+    printf( "    memset      (100 x 'a') - misaligned:        %s\n", s );
+    xeos_memset( s + 1, 'b', 100 );
+    printf( "    xeos_memset (100 x 'b') - misaligned:        %s\n", s );
+    xeos_memset_c( s + 1, 'c', 100 );
+    printf( "    xeos_memset_c (100 x 'c') - misaligned:      %s\n", s );
+    
+    c  = 10000000;
+    t1 = __gettime();
+    
+    for( i = 0; i < c; i++ )
+    {
+        memset( s, 0, 4096 );
+    }
+    
+    t2 = __gettime();
+    
+    for( i = 0; i < c; i++ )
+    {
+        xeos_memset( s, 0, 4096 );
+    }
+    
+    t3 = __gettime();
+    
+    for( i = 0; i < c; i++ )
+    {
+        xeos_memset_c( s, 0, 4096 );
+    }
+    
+    t4 = __gettime();
+    
+    printf( "    %zi iterations - time of memset:        %f\n", c, t2 - t1 );
+    printf( "    %zi iterations - time of xeos_memset:   %f\n", c, t3 - t2 );
+    printf( "    %zi iterations - time of xeos_memset_c: %f\n", c, t4 - t3 );
+    
+    free( s );
+    
+    if( _SSE2Status == 1 )
+    {
+        _SSE2Status = 0;
+        
+        goto start;
+    }
+    
+    return 0;
 }

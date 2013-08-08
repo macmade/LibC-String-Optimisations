@@ -70,8 +70,8 @@ all: strlen memset strchr memchr
 	
 	@$(AS) -f macho64 -o ./build/$@.64.o source/$@.64.s
 	@$(AS) -f macho -o ./build/$@.32.o source/$@.32.s
-	@$(CC) -Weverything -fpic -target x86_64-apple-darwin -o ./build/$@64 source/$@.c ./build/$@.64.o
-	@$(CC) -Weverything -fpic -target i386-apple-darwin -o ./build/$@32 source/$@.c ./build/$@.32.o
+	@$(CC) -Weverything -fpic -target x86_64-apple-darwin -o ./build/$@64 source/$@.c source/$@-test.c ./build/$@.64.o
+	@$(CC) -Weverything -fpic -target i386-apple-darwin -o ./build/$@32 source/$@.c source/$@-test.c ./build/$@.32.o
 	@./build/$@64
 	@./build/$@32
 	

@@ -10,7 +10,7 @@ About
 When applicable, and if the CPU supports it, the functions will take advantage of the **SSE2 instruction** set.  
 If not, less-optimised versions will be used.
 
-Source code is written in **assembly**, with a test C file for each function, benchmarking it versus the system implementation.
+Source code is written in **assembly**, with a test C file and a standard C implementation for each function, benchmarking it versus the system implementation.
 
 Some numbers
 ------------

@@ -61,105 +61,14 @@
 
 /* $Id$ */
 
-#include <stdio.h>
-#include <sys/time.h>
 #include <stdlib.h>
-#include <string.h>
 
-static double __gettime()
+void * xeos_memchr_c( const void * s, int c, size_t n );
+void * xeos_memchr_c( const void * s, int c, size_t n )
 {
-    struct timeval  t;
-    struct timezone tzp;
+    ( void )s;
+    ( void )c;
+    ( void )n;
     
-    gettimeofday( &t, &tzp );
-    
-    return t.tv_sec + t.tv_usec * 1e-6;
-}
-
-void * xeos_memchr( const void * s, int c, size_t n );
-
-extern int _SSE2Status;
-
-int main( void )
-{
-    size_t c;
-    size_t n;
-    size_t i;
-    char * s;
-    double t1;
-    double t2;
-    double t3;
-    
-    xeos_memchr( NULL, 0, 0 );
-    
-    start:
-    
-    #ifdef __LP64__
-    printf( "---------- Testing on x86_64 | SSE2 = %i ----------\n", _SSE2Status );
-    #else
-    printf( "---------- Testing on i386 | SSE2 = %i ----------\n", _SSE2Status );
-    #endif
-    
-    s = "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaabcdef";
-    
-    printf( "    memchr:                                        %p\n", memchr( s, 'f', 106 ) );
-    printf( "    xeos_memchr:                                   %p\n", xeos_memchr( s, 'f', 106 ) );
-    printf( "    memchr:                                        %p\n", memchr( s, 'f', 104 ) );
-    printf( "    xeos_memchr:                                   %p\n", xeos_memchr( s, 'f', 104 ) );
-    
-    s = "abcdef";
-    
-    printf( "    memchr:                                        %p\n", memchr( s, 'f', 6 ) );
-    printf( "    xeos_memchr:                                   %p\n", xeos_memchr( s, 'f', 6 ) );
-    printf( "    memchr:                                        %p\n", memchr( s, 'f', 5 ) );
-    printf( "    xeos_memchr:                                   %p\n", xeos_memchr( s, 'f', 5 ) );
-    printf( "    memchr:                                        %p\n", memchr( s, 'g', 5 ) );
-    printf( "    xeos_memchr:                                   %p\n", xeos_memchr( s, 'g', 5 ) );
-    
-    s++;
-    
-    printf( "    memchr (misaligned):                           %p\n", memchr( s, 'f', 6 ) );
-    printf( "    xeos_memchr (misaligned):                      %p\n", xeos_memchr( s, 'f', 6 ) );
-    printf( "    memchr (misaligned):                           %p\n", memchr( s, 'f', 5 ) );
-    printf( "    xeos_memchr (misaligned):                      %p\n", xeos_memchr( s, 'f', 5 ) );
-    printf( "    memchr (misaligned):                           %p\n", memchr( s, 'g', 5 ) );
-    printf( "    xeos_memchr (misaligned):                      %p\n", xeos_memchr( s, 'g', 5 ) );
-    
-    c        = 10000000;
-    n        = 1000;
-    s        = malloc( n );
-    s[ 999 ] = 0;
-    s[ 998 ] = 'a';
-    
-    memset( s, 'x', 998 );
-    
-    t1 = __gettime();
-    
-    for( i = 0; i < c; i++ )
-    {
-        memchr( s, 'a', 1000 );
-    }
-    
-    t2 = __gettime();
-    
-    for( i = 0; i < c; i++ )
-    {
-        xeos_memchr( s, 'a', 1000 );
-    }
-    
-    t3 = __gettime();
-    
-    printf( "    %zi iterations - time of memchr:          %f\n", c, t2 - t1 );
-    printf( "    %zi iterations - time of xeos_memchr:     %f\n", c, t3 - t2 );
-    
-    free( s );
-    
-    if( _SSE2Status == 1 )
-    {
-        _SSE2Status = 0;
-        
-        goto start;
-    }
-    
-    return 0;
+    return NULL;
 }
