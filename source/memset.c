@@ -62,13 +62,63 @@
 /* $Id$ */
 
 #include <stdlib.h>
+#include <stdint.h>
 
-void * xeos_memset_c( void * s, int c, size_t n );
-void * xeos_memset_c( void * s, int c, size_t n )
+void * xeos_memset_c( void * p, int c, size_t n );
+void * xeos_memset_c( void * p, int c, size_t n )
 {
-    ( void )s;
-    ( void )c;
-    ( void )n;
+    unsigned char * cp;
+    unsigned long * lp;
+    unsigned char   uc;
+    unsigned long   ul;
     
-    return NULL;
+    if( p == NULL || n == 0 )
+    {
+        return NULL;
+    }
+    
+    uc = ( unsigned char )c;
+    ul = ( unsigned long )c;
+    cp = ( unsigned char * )p;
+    
+    if( ul != 0 )
+    {
+        #ifdef __LP64__
+        ul = ( ul << 56 )
+           | ( ul << 48 )
+           | ( ul << 40 )
+           | ( ul << 32 )
+           | ( ul << 24 )
+           | ( ul << 16 )
+           | ( ul << 8 )
+           |   ul;
+        #else
+        ul = ( ul << 24 )
+           | ( ul << 16 )
+           | ( ul << 8 )
+           |   ul;
+        #endif
+    }
+    
+    while( ( ( ( unsigned long )cp & ( unsigned long )-sizeof( long ) ) < ( unsigned long )cp ) && n-- )
+    {
+        *( cp++ ) = uc;
+    }
+    
+    lp  = ( unsigned long * )( ( void * )cp );
+    
+    while( ( n / sizeof( long ) ) > 0 )
+    {
+        *( lp++ ) = ul;
+        n        -= sizeof( long );
+    }
+    
+    cp = ( unsigned char * )( ( void * )lp );
+    
+    while( n-- )
+    {
+        *( cp++ ) = uc;
+    }
+    
+    return p;
 }
