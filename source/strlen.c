@@ -72,6 +72,7 @@ size_t xeos_strlen_c( const char * s )
     
     cp = s;
     
+    /* Reads one byte at a time until the pointer is aligned to a long */
     while( ( ( ( long )cp & ( long )-sizeof( long ) ) < ( long )cp ) )
     {
         if( *( cp++ ) == 0 )
@@ -80,12 +81,17 @@ size_t xeos_strlen_c( const char * s )
         }
     }
     
+    /* Now that the pointer is aligned, we can read one long at a time */
     lp = ( const unsigned long * )( ( void * )cp );
     
     while( 1 )
     {
         l = *( lp++ );
         
+        /*
+         * Checks if a byte from "l" is zero - Thanks to Sean Eron Anderson:
+         * http://graphics.stanford.edu/~seander/bithacks.html
+         */
         #ifdef __LP64__
         if( !( ( l - 0x0101010101010101 ) & ( ~l & 0x8080808080808080 ) ) )
         #else
