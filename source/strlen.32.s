@@ -260,13 +260,23 @@ _strlen32_sse2:
 ;-------------------------------------------------------------------------------   
 _strlen32:
     
+    ; Creates a stack frame, so we can save registers, making them available
+    ; to use. Otherwise, only 3 registers are safe, which is not enough here
+    push    ebp
+    mov     ebp,        esp
+    
+    ; Saves EDI, ESI and EBX as we are going to use them
+    push    edi
+    push    esi
+    push    ebx
+    
     ; Gets the original string pointer in ECX from the stack
-    mov         ecx,    [ esp + 4 ]
+    mov         ecx,    [ ebp + 8 ]
     
     ; Stores the original string pointer in EAX
     mov         eax,    ecx
     
-    ; Aligns the string pointer in ECX to a 8-byte boundary
+    ; Aligns the string pointer in ECX to a 4-byte boundary
     and         ecx,    -4
     
     ; Gets the number of misaligned bytes in the original string pointer
@@ -279,7 +289,7 @@ _strlen32:
     ; Saves the string pointer in EDX, as we are going to use ECX
     xchg        edx,    ecx
     
-    ; As we aligned the string pointer in EDX to a 8-byte boundary,
+    ; As we aligned the string pointer in EDX to a 4-byte boundary,
     ; any preceding byte has to be ignored.
     ; So let's create a mask for those bytes in EAX, based on the number of
     ; misaligned bytes in the original string pointer (ECX)
@@ -289,7 +299,7 @@ _strlen32:
     shl         eax,    cl
     not         eax
     
-    ; Reads 8 bytes from the string
+    ; Reads 4 bytes from the string
     mov         ecx,    [ edx ]
     
     ; Masks the unwanted bytes in ECX
@@ -302,6 +312,33 @@ _strlen32:
     ; This could have been implemented with an assembly loop, to avoid
     ; repeating the test for each byte, but it is much faster this way.
     .scan:
+        
+        ; Checks if a byte from RDX is zero - Thanks to Sean Eron Anderson:
+        ; http://graphics.stanford.edu/~seander/bithacks.html
+        mov         edi,    0x01010101
+        mov         ebx,    ecx
+        sub         ebx,    edi
+        
+        mov         edi,    0x80808080
+        mov         esi,    ecx
+        not         esi
+        and         esi,    edi
+        
+        and         ebx,    esi
+        test        ebx,    ebx
+        jnz         .test
+        
+        ; Increase EAX
+        add         eax,    4
+        
+        ; Reads the next 4 bytes from the string
+        add         edx,    4
+        mov         ecx,    [ edx ]
+        
+        ; Scans the next bytes
+        jmp         .scan
+        
+    .test:
         
         ; Test byte 1 for 0
         test        ecx,    0xFF
@@ -334,7 +371,7 @@ _strlen32:
         ; Increase EAX
         inc         eax
         
-        ; Reads the next 8 bytes from the string
+        ; Reads the next 4 bytes from the string
         add         edx,    4
         mov         ecx,    [ edx ]
         
@@ -349,14 +386,20 @@ _strlen32:
         ; Stores the original string pointer in EDX
         mov         edx,    ecx
         
-        ; Aligns the string pointer in ECX to a 8-byte boundary
+        ; Aligns the string pointer in ECX to a 4-byte boundary
         and         ecx,    -4
         
         ; Gets the number of misaligned bytes in the original string pointer
         sub         edx,    ecx
         
         ; Substract the number of preceding bytes needed to align the string
-        ; pointer to a 8-byte boundary
+        ; pointer to a 4-byte boundary
         sub         eax,    edx
+        
+        ; Restores saved registers
+        pop     ebx
+        pop     esi
+        pop     edi
+        pop     ebp
         
         ret

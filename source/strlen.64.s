@@ -298,6 +298,31 @@ _strlen64:
     ; repeating the test for each byte, but it is much faster this way.
     .scan:
         
+        ; Checks if a byte from RDX is zero - Thanks to Sean Eron Anderson:
+        ; http://graphics.stanford.edu/~seander/bithacks.html
+        mov         r10,    0x0101010101010101
+        mov         r11,    0x8080808080808080
+        mov         r8,     rdx
+        mov         r9,     rdx
+        sub         r8,     r10
+        not         r9
+        and         r9,     r11
+        and         r8,     r9
+        test        r8,     r8
+        jnz         .test
+        
+        ; Increase RAX
+        add         rax,    8
+        
+        ; Reads the next 8 bytes from the string
+        add         rdi,    8
+        mov         rdx,    [ rdi ]
+        
+        ; Scans the next bytes
+        jmp         .scan
+        
+    .test:
+        
         ; Test byte 1 for 0
         test        rdx,    0xFF
         jz          .found
@@ -365,7 +390,7 @@ _strlen64:
         add         rdi,    8
         mov         rdx,    [ rdi ]
         
-        ; Scans the bytes that have been read
+        ; Scans the next bytes
         jmp         .scan
     
     .found:
