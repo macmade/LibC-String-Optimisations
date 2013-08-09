@@ -199,24 +199,7 @@ _strlen32_sse2:
     
     ; Masks the unwanted bytes in EDX, and checks if a 0 byte was found
     and         edx,    eax
-    jz          .notfound
-    
-    .found:
-        
-        ; Gets the index of the first bit set in EAX
-        ; (index of the found 0-byte)
-        bsf         eax,    edx
-        
-        ; Gets the string pointer in EDX from the stack
-        mov         edx,    [ esp + 4 ]
-        
-        ; Computes the difference between the original string pointer
-        ; and the current value of RCX, and adjusts EAX so it now
-        ; contains the string length
-        sub         edx,    ecx
-        sub         eax,    edx
-        
-        ret
+    jnz         .found
         
     .notfound:
         
@@ -236,10 +219,24 @@ _strlen32_sse2:
         
         ; Checks if a bit is set, meaning a zero byte was found
         test        edx,    edx
-        jnz         .found
+        jz          .notfound
+    
+    .found:
         
-        ; Not found - Continues scanning
-        jmp         .notfound
+        ; Gets the index of the first bit set in EAX
+        ; (index of the found 0-byte)
+        bsf         eax,    edx
+        
+        ; Gets the string pointer in EDX from the stack
+        mov         edx,    [ esp + 4 ]
+        
+        ; Computes the difference between the original string pointer
+        ; and the current value of RCX, and adjusts EAX so it now
+        ; contains the string length
+        sub         edx,    ecx
+        sub         eax,    edx
+        
+        ret
 
 ;-------------------------------------------------------------------------------
 ; 32-bits optimized strlen() function

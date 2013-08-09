@@ -201,22 +201,8 @@ _strlen64_sse2:
     
     ; Masks the unwanted bytes in RDX, and checks if a 0 byte was found
     and         rdx,    rax
-    jz          .notfound
+    jnz         .found
     
-    .found:
-        
-        ; Gets the index of the first bit set in RAX
-        ; (index of the found 0-byte)
-        bsf         rax,    rdx
-        
-        ; Computes the difference between the original string pointer
-        ; and the current value of RDI, and adjusts RAX so it now
-        ; contains the string length
-        sub         rsi,    rdi
-        sub         rax,    rsi
-        
-        ret
-        
     .notfound:
         
         ; Next 16 bytes from RDI will be checked
@@ -235,10 +221,21 @@ _strlen64_sse2:
         
         ; Checks if a bit is set, meaning a zero byte was found
         test        rdx,    rdx
-        jnz         .found
+        jz          .notfound
         
-        ; Not found - Continues scanning
-        jmp         .notfound
+    .found:
+        
+        ; Gets the index of the first bit set in RAX
+        ; (index of the found 0-byte)
+        bsf         rax,    rdx
+        
+        ; Computes the difference between the original string pointer
+        ; and the current value of RDI, and adjusts RAX so it now
+        ; contains the string length
+        sub         rsi,    rdi
+        sub         rax,    rsi
+        
+        ret
             
 ;-------------------------------------------------------------------------------
 ; 64-bits optimized strlen() function
