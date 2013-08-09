@@ -66,7 +66,47 @@
 size_t xeos_strlen_c( const char * s );
 size_t xeos_strlen_c( const char * s )
 {
-    ( void )s;
+    const char          * cp;
+    const unsigned long * lp;
+    unsigned long         l;
     
-    return 0;
+    cp = s;
+    
+    while( ( ( ( long )cp & ( long )-sizeof( long ) ) < ( long )cp ) )
+    {
+        if( *( cp++ ) == 0 )
+        {
+            return ( size_t )( --cp - s );
+        }
+    }
+    
+    lp = ( const unsigned long * )( ( void * )cp );
+    
+    while( 1 )
+    {
+        l = *( lp++ );
+        
+        #ifdef __LP64__
+        if( !( ( l - 0x0101010101010101 ) & ( ~l & 0x8080808080808080 ) ) )
+        #else
+        if( !( ( l - 0x01010101 ) & ( ~l & 0x80808080 ) ) )
+        #endif
+        {
+            continue;
+        }
+        
+        if( ( l & 0x000000FF ) == 0 ) { return ( size_t )( ( uintptr_t )( --lp ) - ( uintptr_t )s ); }
+        if( ( l & 0x0000FF00 ) == 0 ) { return ( size_t )( ( uintptr_t )( --lp ) - ( uintptr_t )s ) + 1; }
+        if( ( l & 0x00FF0000 ) == 0 ) { return ( size_t )( ( uintptr_t )( --lp ) - ( uintptr_t )s ) + 2; }
+        if( ( l & 0xFF000000 ) == 0 ) { return ( size_t )( ( uintptr_t )( --lp ) - ( uintptr_t )s ) + 3; }
+        
+        #ifdef __LP64__
+        
+        if( ( l & 0x000000FF00000000 ) == 0 ) { return ( size_t )( ( uintptr_t )( --lp ) - ( uintptr_t )s ) + 4; }
+        if( ( l & 0x0000FF0000000000 ) == 0 ) { return ( size_t )( ( uintptr_t )( --lp ) - ( uintptr_t )s ) + 5; }
+        if( ( l & 0x00FF000000000000 ) == 0 ) { return ( size_t )( ( uintptr_t )( --lp ) - ( uintptr_t )s ) + 6; }
+        if( ( l & 0xFF00000000000000 ) == 0 ) { return ( size_t )( ( uintptr_t )( --lp ) - ( uintptr_t )s ) + 7; }
+        
+        #endif
+    }
 }
