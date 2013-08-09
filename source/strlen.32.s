@@ -313,7 +313,7 @@ _strlen32:
     ; repeating the test for each byte, but it is much faster this way.
     .scan:
         
-        ; Checks if a byte from RDX is zero - Thanks to Sean Eron Anderson:
+        ; Checks if a byte from ECX is zero - Thanks to Sean Eron Anderson:
         ; http://graphics.stanford.edu/~seander/bithacks.html
         mov         edi,    0x01010101
         mov         ebx,    ecx
