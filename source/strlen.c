@@ -62,6 +62,7 @@
 /* $Id$ */
 
 #include <stdlib.h>
+#include <stdint.h>
 
 size_t xeos_strlen_c( const char * s );
 size_t xeos_strlen_c( const char * s )
@@ -73,7 +74,7 @@ size_t xeos_strlen_c( const char * s )
     cp = s;
     
     /* Reads one byte at a time until the pointer is aligned to a long */
-    while( ( ( ( long )cp & ( long )-sizeof( long ) ) < ( long )cp ) )
+    while( ( ( ( uintptr_t )cp & ( uintptr_t )-sizeof( long ) ) < ( uintptr_t )cp ) )
     {
         if( *( cp++ ) == 0 )
         {
