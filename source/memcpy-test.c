@@ -108,35 +108,35 @@ int main( void )
     
     memset( s1, 'a', 99 );
     
-    memset( s2, 'x', 99 );
+    memset( s2, ' ', 99 );
     memcpy( s2, s1, 100 );
-    printf( "    memcpy:                                      %s\n", s2 );
+    printf( "    memcpy:                                                   %s\n", s2 );
     
-    memset( s2, 'x', 99 );
+    memset( s2, ' ', 99 );
     xeos_memcpy( s2, s1, 100 );
-    printf( "    xeos_memcpy:                                 %s\n", s2 );
+    printf( "    xeos_memcpy:                                              %s\n", s2 );
     
-    memset( s2, 'x', 99 );
+    memset( s2, ' ', 99 );
     xeos_memcpy_c( s2, s1, 100 );
-    printf( "    xeos_memcpy_c:                               %s\n", s2 );
+    printf( "    xeos_memcpy_c:                                            %s\n", s2 );
     
-    s1++;
-    s2++;
+    s1 += 1;
+    s2 += 2;
     
-    memset( s2, 'x', 98 );
-    memcpy( s2, s1, 99 );
-    printf( "    memcpy (misaligned):                         %s\n", s2 );
+    memset( s2, ' ', 98 );
+    memcpy( s2, s1, 98 );
+    printf( "    memcpy (misaligned):                                      %s\n", s2 );
     
-    memset( s2, 'x', 98 );
-    xeos_memcpy( s2, s1, 99 );
-    printf( "    xeos_memcpy (misaligned):                    %s\n", s2 );
+    memset( s2, ' ', 98 );
+    xeos_memcpy( s2, s1, 98 );
+    printf( "    xeos_memcpy (misaligned):                                 %s\n", s2 );
     
-    memset( s2, 'x', 98 );
-    xeos_memcpy_c( s2, s1, 99 );
-    printf( "    xeos_memcpy_c (misaligned):                  %s\n", s2 );
+    memset( s2, ' ', 98 );
+    xeos_memcpy_c( s2, s1, 98 );
+    printf( "    xeos_memcpy_c (misaligned):                               %s\n", s2 );
     
-    free( --s1 );
-    free( --s2 );
+    free( s1 - 1 );
+    free( s2 - 2 );
     
     s1 = malloc( 4096 );
     s2 = malloc( 4096 );
@@ -165,12 +165,49 @@ int main( void )
     
     t4 = __gettime();
     
-    printf( "    %zi iterations - time of memcpy:        %f\n", c, t2 - t1 );
-    printf( "    %zi iterations - time of xeos_memcpy:   %f\n", c, t3 - t2 );
-    printf( "    %zi iterations - time of xeos_memcpy_c: %f\n", c, t4 - t3 );
+    printf( "    %zi iterations - time of memcpy:                     %f\n", c, t2 - t1 );
+    printf( "    %zi iterations - time of xeos_memcpy:                %f\n", c, t3 - t2 );
+    printf( "    %zi iterations - time of xeos_memcpy_c:              %f\n", c, t4 - t3 );
     
     free( s1 );
     free( s2 );
+    
+    s1 = malloc( 4096 + 1 );
+    s2 = malloc( 4096 + 2 );
+    
+    s1 += 1;
+    s2 += 2;
+    
+    c  = 10000000;
+    t1 = __gettime();
+    
+    for( i = 0; i < c; i++ )
+    {
+        memcpy( s2, s1, 4096 );
+    }
+    
+    t2 = __gettime();
+    
+    for( i = 0; i < c; i++ )
+    {
+        xeos_memcpy( s2, s1, 4096 );
+    }
+    
+    t3 = __gettime();
+    
+    for( i = 0; i < c; i++ )
+    {
+        xeos_memcpy_c( s2, s1, 4096 );
+    }
+    
+    t4 = __gettime();
+    
+    printf( "    %zi iterations - time of memcpy (misaligned):        %f\n", c, t2 - t1 );
+    printf( "    %zi iterations - time of xeos_memcpy (misaligned):   %f\n", c, t3 - t2 );
+    printf( "    %zi iterations - time of xeos_memcpy_c (misaligned): %f\n", c, t4 - t3 );
+    
+    free( s1 - 1 );
+    free( s2 - 2 );
     
     if( _SSE2Status == 1 )
     {

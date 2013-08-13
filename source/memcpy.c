@@ -67,9 +67,97 @@
 void * xeos_memcpy_c( void * restrict s1, const void * restrict s2, size_t n );
 void * xeos_memcpy_c( void * restrict s1, const void * restrict s2, size_t n )
 {
-    ( void )s1;
-    ( void )s2;
-    ( void )n;
+    /* Note: scopes are used in order to comply with the 'restrict' keyword */
+    
+    if( s1 == NULL || s2 == NULL || n == 0 )
+    {
+        return s1;
+    }
+    
+    {
+        unsigned char       * cp1;
+        const unsigned char * cp2;
+        unsigned long       * lp1;
+        const unsigned long * lp2;
+        
+        cp1 = s1;
+        cp2 = s2;
+        
+        while( n > 0 && ( ( ( uintptr_t )cp2 & ( uintptr_t )-sizeof( unsigned long ) ) < ( uintptr_t )cp2 ) )
+        {
+            *( cp1++ ) = *( cp2++ );
+            
+            n--;
+        }
+            
+        lp1 = ( void * )cp1;
+        lp2 = ( void * )cp2;
+        
+        if( ( ( uintptr_t )lp1 & ( uintptr_t )-sizeof( unsigned long ) ) == ( uintptr_t )lp1 )
+        {
+            while( n >= sizeof( unsigned long ) * 16 )
+            {
+                lp1[  0 ] = lp2[  0 ];
+                lp1[  1 ] = lp2[  1 ];
+                lp1[  2 ] = lp2[  2 ];
+                lp1[  3 ] = lp2[  3 ];
+                lp1[  4 ] = lp2[  4 ];
+                lp1[  5 ] = lp2[  5 ];
+                lp1[  6 ] = lp2[  6 ];
+                lp1[  7 ] = lp2[  7 ];
+                lp1[  8 ] = lp2[  8 ];
+                lp1[  9 ] = lp2[  9 ];
+                lp1[ 10 ] = lp2[ 10 ];
+                lp1[ 11 ] = lp2[ 11 ];
+                lp1[ 12 ] = lp2[ 12 ];
+                lp1[ 13 ] = lp2[ 13 ];
+                lp1[ 14 ] = lp2[ 14 ];
+                lp1[ 15 ] = lp2[ 15 ];
+                n        -= sizeof( unsigned long ) * 16;
+                lp1      += 16;
+                lp2      += 16;
+            }
+            
+            while( n >= sizeof( unsigned long ) * 8 )
+            {
+                lp1[ 0 ] = lp2[ 0 ];
+                lp1[ 1 ] = lp2[ 1 ];
+                lp1[ 2 ] = lp2[ 2 ];
+                lp1[ 3 ] = lp2[ 3 ];
+                lp1[ 4 ] = lp2[ 4 ];
+                lp1[ 5 ] = lp2[ 5 ];
+                lp1[ 6 ] = lp2[ 6 ];
+                lp1[ 7 ] = lp2[ 7 ];
+                n       -= sizeof( unsigned long ) * 8;
+                lp1     += 8;
+                lp2     += 8;
+            }
+            
+            while( n >= sizeof( unsigned long ) )
+            {
+                *( lp1++ ) = *( lp2++ );
+                n         -= sizeof( unsigned long );
+            }
+            
+            cp1 = ( void * )lp1;
+            cp2 = ( void * )lp2;
+            
+            while( n-- )
+            {
+                *( cp1++ ) = *( cp2++ );
+            }
+        }
+        else
+        {
+            cp1 = ( void * )lp1;
+            cp2 = ( void * )lp2;
+            
+            while( n-- )
+            {
+                *( cp1++ ) = *( cp2++ );
+            }
+        }
+    }
     
     return s1;
 }
