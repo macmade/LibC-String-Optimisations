@@ -405,14 +405,15 @@ _memchr32:
     ; Ensures the character to search is 8 bits
     and         esi,    0xFF
     
-    ; Stores the original memory pointer in ECX
+    ; Stores the original memory pointer in ECX and EAX
     mov         ecx,    edi
+    mov         eax,    edi
     
-    ; Aligns the pointer in ECX to a 4-byte boundary
-    and         ecx,    -4
+    ; Aligns the pointer in EAX to a 4-byte boundary
+    and         eax,    -4
     
-    ; Gets the number of misaligned bytes in the original memory pointer (EDI)
-    sub         ecx,    edi
+    ; Gets the number of misaligned bytes in the original memory pointer (ECX)
+    sub         ecx,    eax
     
     ; Checks if we're aligned
     test        ecx,    ecx
@@ -434,60 +435,53 @@ _memchr32:
         test        edx,    edx
         jz          .null
         
-        ; Reads 8 bytes from RDI and xor them with RSI, so matching bytes
+        ; Checks if we can read 8 bytes (otherwise, we'll read one byte at a time)
+        cmp         edx,    4
+        jb          .aligned_end
+        
+        ; Reads 4 bytes from EDI and xor them with ESI, so matching bytes
         ; will be zero
         mov         eax,    [ edi ]
         xor         eax,    esi
         
         ; Checks if the character was found
-        test        al,     al
+        test        eax,    0x000000FF
         jz          .found
         
         ; Advances the memory pointer and decreases the buffer size
         add         edi,    1
         sub         edx,    1
-        
-        ; Checks if we've reached the buffer size limit
-        test        edx,    edx
-        jz          .null
         
         ; Checks if the character was found in the next byte
-        shr         eax,    8
-        test        al,     al
+        test        eax,    0x0000FF00
         jz          .found
         
         ; Advances the memory pointer and decreases the buffer size
         add         edi,    1
         sub         edx,    1
-        
-        ; Checks if we've reached the buffer size limit
-        test        edx,    edx
-        jz          .null
         
         ; Checks if the character was found in the next byte
-        shr         eax,    8
-        test        al,     al
+        test        eax,    0x00FF0000
         jz          .found
         
         ; Advances the memory pointer and decreases the buffer size
         add         edi,    1
         sub         edx,    1
-        
-        ; Checks if we've reached the buffer size limit
-        test        edx,    edx
-        jz          .null
         
         ; Checks if the character was found in the next byte
-        shr         eax,    8
-        test        al,     al
+        test        eax,    0xFF000000
         jz          .found
-        
-        ; Advances the memory pointer and decreases the buffer size
-        add         edi,    1
-        sub         edx,    1
         
         ; Not found - Continues scanning
         jmp         .aligned_loop
+        
+    .aligned_end:
+        
+        ; Ensures the character to search is 8 bits
+        and         esi,    0xFF
+        
+        ; Number of remaining bytes
+        mov         ecx,    edx
         
     .notaligned:
         
@@ -496,6 +490,7 @@ _memchr32:
         jz          .null
         
         ; Reads a byte from EDI
+        xor         eax,    eax
         mov         al,     [ edi ]
         
         ; Checks if the character is found
@@ -504,10 +499,10 @@ _memchr32:
         
         ; Advances the memory pointer and decreases the buffer size
         add         edi,    1
-        sub         ecx,    1
+        sub         edx,    1
         
         ; Decreases the number of time we need to loop until we're aligned
-        sub         edx,    1
+        sub         ecx,    1
         
         ; Checks if we're aligned
         test        ecx,    ecx

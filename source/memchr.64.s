@@ -384,14 +384,15 @@ _memchr64:
     ; Ensures the character to search is 8 bits
     and         rsi,    0xFF
     
-    ; Stores the original memory pointer in RCX
+    ; Stores the original memory pointer in RCX and RAX
     mov         rcx,    rdi
+    mov         rax,    rdi
     
-    ; Aligns the pointer in RCX to a 8-byte boundary
-    and         rcx,    -8
+    ; Aligns the pointer in RAX to a 8-byte boundary
+    and         rax,    -8
     
-    ; Gets the number of misaligned bytes in the original memory pointer (RDI)
-    sub         rcx,    rdi
+    ; Gets the number of misaligned bytes in the original memory pointer (RCX)
+    sub         rcx,    rax
     
     ; Checks if we're aligned
     test        rcx,    rcx
@@ -416,6 +417,10 @@ _memchr64:
         test        rdx,    rdx
         jz          .null
         
+        ; Checks if we can read 8 bytes (otherwise, we'll read one byte at a time)
+        cmp         rdx,    8
+        jb          .aligned_end
+        
         ; Reads 8 bytes from RDI and xor them with RSI, so matching bytes
         ; will be zero
         mov         rax,    [ rdi ]
@@ -429,10 +434,6 @@ _memchr64:
         add         rdi,    1
         sub         rdx,    1
         
-        ; Checks if we've reached the buffer size limit
-        test        rdx,    rdx
-        jz          .null
-        
         ; Checks if the character was found in the next byte
         test        rax,    0x0000FF00
         jz          .found
@@ -440,10 +441,6 @@ _memchr64:
         ; Advances the memory pointer and decreases the buffer size
         add         rdi,    1
         sub         rdx,    1
-        
-        ; Checks if we've reached the buffer size limit
-        test        rdx,    rdx
-        jz          .null
         
         ; Checks if the character was found in the next byte
         test        rax,    0x00FF0000
@@ -453,24 +450,16 @@ _memchr64:
         add         rdi,    1
         sub         rdx,    1
         
-        ; Checks if we've reached the buffer size limit
-        test        rdx,    rdx
-        jz          .null
-        
         ; Checks if the character was found in the next byte
         test        rax,    0xFF000000
         jz          .found
         
-        shr rax, 32
-        
+        ; Process next 4 bytes
+        shr         rax,    32
         
         ; Advances the memory pointer and decreases the buffer size
         add         rdi,    1
         sub         rdx,    1
-        
-        ; Checks if we've reached the buffer size limit
-        test        rdx,    rdx
-        jz          .null
         
         ; Checks if the character was found in the next byte
         test        rax,    0x000000FF
@@ -480,10 +469,6 @@ _memchr64:
         add         rdi,    1
         sub         rdx,    1
         
-        ; Checks if we've reached the buffer size limit
-        test        rdx,    rdx
-        jz          .null
-        
         ; Checks if the character was found in the next byte
         test        rax,    0x0000FF00
         jz          .found
@@ -492,10 +477,6 @@ _memchr64:
         add         rdi,    1
         sub         rdx,    1
         
-        ; Checks if we've reached the buffer size limit
-        test        rdx,    rdx
-        jz          .null
-        
         ; Checks if the character was found in the next byte
         test        rax,    0x00FF0000
         jz          .found
@@ -503,10 +484,6 @@ _memchr64:
         ; Advances the memory pointer and decreases the buffer size
         add         rdi,    1
         sub         rdx,    1
-        
-        ; Checks if we've reached the buffer size limit
-        test        rdx,    rdx
-        jz          .null
         
         ; Checks if the character was found in the next byte
         test        rax,    0xFF000000
@@ -518,6 +495,14 @@ _memchr64:
         
         ; Not found - Continues scanning
         jmp         .aligned_loop
+    
+    .aligned_end:
+        
+        ; Ensures the character to search is 8 bits
+        and         rsi,    0xFF
+        
+        ; Number of remaining bytes
+        mov         rcx,    rdx
         
     .notaligned:
         
@@ -526,6 +511,7 @@ _memchr64:
         jz          .null
         
         ; Reads a byte from RDI
+        xor         rax,    rax
         mov         al,     [ rdi ]
         
         ; Checks if the character is found
