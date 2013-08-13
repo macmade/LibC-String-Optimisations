@@ -62,6 +62,7 @@
 /* $Id$ */
 
 #include <stdlib.h>
+#include <stdint.h>
 
 void * xeos_memset_c( void * p, int c, size_t n );
 void * xeos_memset_c( void * p, int c, size_t n )
@@ -72,7 +73,7 @@ void * xeos_memset_c( void * p, int c, size_t n )
     
     if( p == NULL || n == 0 )
     {
-        return NULL;
+        return p;
     }
     
     cp = p;

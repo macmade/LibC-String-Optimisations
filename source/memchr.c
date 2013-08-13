@@ -62,6 +62,7 @@
 /* $Id$ */
 
 #include <stdlib.h>
+#include <stdint.h>
 
 void * xeos_memchr_c( const void * p, int c, size_t n );
 void * xeos_memchr_c( const void * p, int c, size_t n )
