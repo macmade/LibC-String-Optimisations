@@ -412,13 +412,17 @@ _memchr64:
         
     .aligned_loop:
         
+        ; Checks if we've reached the buffer size limit
+        test        rdx,    rdx
+        jz          .null
+        
         ; Reads 8 bytes from RDI and xor them with RSI, so matching bytes
         ; will be zero
         mov         rax,    [ rdi ]
         xor         rax,    rsi
         
         ; Checks if the character was found
-        test        al,     al
+        test        rax,    0x000000FF
         jz          .found
         
         ; Advances the memory pointer and decreases the buffer size
@@ -430,8 +434,7 @@ _memchr64:
         jz          .null
         
         ; Checks if the character was found in the next byte
-        shr         rax,    8
-        test        al,     al
+        test        rax,    0x0000FF00
         jz          .found
         
         ; Advances the memory pointer and decreases the buffer size
@@ -443,8 +446,7 @@ _memchr64:
         jz          .null
         
         ; Checks if the character was found in the next byte
-        shr         rax,    8
-        test        al,     al
+        test        rax,    0x00FF0000
         jz          .found
         
         ; Advances the memory pointer and decreases the buffer size
@@ -456,8 +458,22 @@ _memchr64:
         jz          .null
         
         ; Checks if the character was found in the next byte
-        shr         rax,    8
-        test        al,     al
+        test        rax,    0xFF000000
+        jz          .found
+        
+        shr rax, 32
+        
+        
+        ; Advances the memory pointer and decreases the buffer size
+        add         rdi,    1
+        sub         rdx,    1
+        
+        ; Checks if we've reached the buffer size limit
+        test        rdx,    rdx
+        jz          .null
+        
+        ; Checks if the character was found in the next byte
+        test        rax,    0x000000FF
         jz          .found
         
         ; Advances the memory pointer and decreases the buffer size
@@ -469,8 +485,7 @@ _memchr64:
         jz          .null
         
         ; Checks if the character was found in the next byte
-        shr         rax,    8
-        test        al,     al
+        test        rax,    0x0000FF00
         jz          .found
         
         ; Advances the memory pointer and decreases the buffer size
@@ -482,8 +497,7 @@ _memchr64:
         jz          .null
         
         ; Checks if the character was found in the next byte
-        shr         rax,    8
-        test        al,     al
+        test        rax,    0x00FF0000
         jz          .found
         
         ; Advances the memory pointer and decreases the buffer size
@@ -495,21 +509,7 @@ _memchr64:
         jz          .null
         
         ; Checks if the character was found in the next byte
-        shr         rax,    8
-        test        al,     al
-        jz          .found
-        
-        ; Advances the memory pointer and decreases the buffer size
-        add         rdi,    1
-        sub         rdx,    1
-        
-        ; Checks if we've reached the buffer size limit
-        test        rdx,    rdx
-        jz          .null
-        
-        ; Checks if the character was found in the next byte
-        shr         rax,    8
-        test        al,     al
+        test        rax,    0xFF000000
         jz          .found
         
         ; Advances the memory pointer and decreases the buffer size
@@ -534,10 +534,10 @@ _memchr64:
         
         ; Advances the memory pointer and decreases the buffer size
         add         rdi,    1
-        sub         rcx,    1
+        sub         rdx,    1
         
         ; Decreases the number of time we need to loop until we're aligned
-        sub         rdx,    1
+        sub         rcx,    1
         
         ; Checks if we're aligned
         test        rcx,    rcx

@@ -430,6 +430,10 @@ _memchr32:
         
     .aligned_loop:
         
+        ; Checks if we've reached the buffer size limit
+        test        edx,    edx
+        jz          .null
+        
         ; Reads 8 bytes from RDI and xor them with RSI, so matching bytes
         ; will be zero
         mov         eax,    [ edi ]
