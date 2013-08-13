@@ -175,6 +175,14 @@ _memset32_sse2:
     ; Saves the original memory pointer, as we'll need to return it
     mov     ebx,        edi
     
+    ; Checks for a NULL memory pointer
+    test    edi,        edi
+    jz      .end
+    
+    ; Checks for a zero size
+    test    edx,        edx
+    jz      .end
+    
     ; memset() is often called to set a buffer to zero, so prepare xmm0
     ; for such a case
     pxor    xmm0,       xmm0
@@ -442,6 +450,14 @@ _memset32:
     
     ; Saves the original memory pointer, as we'll need to return it
     mov     ebx,        edi
+    
+    ; Checks for a NULL memory pointer
+    test    edi,        edi
+    jz      .end
+    
+    ; Checks for a zero size
+    test    edx,        edx
+    jz      .end
     
     ; Checks if bytes needs to be set to zero
     cmp     esi,        0
