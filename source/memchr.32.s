@@ -409,11 +409,11 @@ _memchr32:
     ; Ensures the character to search is 8 bits
     and         esi,    0xFF
     
-    ; Stores the original memory pointer in EBX and ECX
+    ; Stores the original memory pointer in ECX
     mov         ecx,    edi
     
-    ; Aligns the pointer in EBX to a 4-byte boundary
-    and         ebx,    -4
+    ; Aligns the pointer in ECX to a 4-byte boundary
+    and         ecx,    -4
     
     ; Gets the number of misaligned bytes in the original memory pointer (EDI)
     sub         ecx,    edi
