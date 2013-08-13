@@ -160,6 +160,10 @@ _strlen32_sse2:
     ; Gets the string pointer in EDX from the stack
     mov         edx,    [ esp + 4 ]
     
+    ; Checks for a NULL string
+    test        edx,    edx
+    jz          .null
+    
     ; Stores the original string pointer in EAX
     mov         eax,    edx
     
@@ -237,6 +241,13 @@ _strlen32_sse2:
         sub         eax,    edx
         
         ret
+    
+    .null:
+        
+        ; NULL string - Returns 0
+        xor         eax,    eax
+        
+        ret
 
 ;-------------------------------------------------------------------------------
 ; 32-bits optimized strlen() function
@@ -269,6 +280,10 @@ _strlen32:
     
     ; Gets the original string pointer in ECX from the stack
     mov         ecx,    [ ebp + 8 ]
+    
+    ; Checks for a NULL string
+    test        ecx,    ecx
+    jz          .null
     
     ; Stores the original string pointer in EAX
     mov         eax,    ecx
@@ -398,5 +413,12 @@ _strlen32:
         pop     esi
         pop     edi
         pop     ebp
+        
+        ret
+    
+    .null:
+        
+        ; NULL string - Returns 0
+        xor         eax,    eax
         
         ret
