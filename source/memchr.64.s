@@ -252,7 +252,7 @@ _memchr64_sse2:
         movdqa      xmm1,   [ rdi ]
         movdqa      xmm2,   [ rdi + 16 ]
         movdqa      xmm3,   [ rdi + 32 ]
-        movdqa      xmm4,   [ rdi + 64 ]
+        movdqa      xmm4,   [ rdi + 48 ]
         
         ; Compares the 64 bytes read with the character to search (in XMM0)
         ; Equal bytes will be set to all 1s in the XMM reisters, others to all 0s
