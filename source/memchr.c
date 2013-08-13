@@ -70,6 +70,7 @@ void * xeos_memchr_c( const void * p, int c, size_t n )
     const unsigned long * lp;
     unsigned long         l;
     unsigned long         mask;
+    unsigned long         magic;
     
     if( p == NULL || n == 0 )
     {
@@ -89,11 +90,12 @@ void * xeos_memchr_c( const void * p, int c, size_t n )
         n--;
     }
     
-    lp   = ( const unsigned long * )( ( void * )cp );
-    mask = ( unsigned long )c << 24
-         | ( unsigned long )c << 16
-         | ( unsigned long )c << 8
-         | ( unsigned long )c;
+    magic = ( ( ~0UL / 255 ) * ( unsigned char )c );
+    lp    = ( const unsigned long * )( ( void * )cp );
+    mask  = ( unsigned long )c << 24
+          | ( unsigned long )c << 16
+          | ( unsigned long )c << 8
+          | ( unsigned long )c;
     
     #ifdef __LP64__
     mask = mask << 32 | mask;
@@ -101,8 +103,30 @@ void * xeos_memchr_c( const void * p, int c, size_t n )
     
     while( n > sizeof( unsigned long ) )
     {
-        l  = *( lp++ ) ^ mask;
+        l  = *( lp++ );
         n -= sizeof( unsigned long );
+        
+        /*
+         * Checks if a byte from "l" contains the character - Thanks to Sean
+         * Eron Anderson:
+         * http://graphics.stanford.edu/~seander/bithacks.html
+         */
+        {
+            unsigned long l2;
+            
+            l2 = l ^ magic;
+            
+            #ifdef __LP64__
+            if( !( ( l2 - 0x0101010101010101 ) & ( ~l2 & 0x8080808080808080 ) ) )
+            #else
+            if( !( ( l2 - 0x01010101 ) & ( ~l2 & 0x80808080 ) ) )
+            #endif
+            {
+                continue;
+            }
+        }
+        
+        l = l ^ mask;
         
         if( ( l & 0x000000FF ) == 0 ) { return ( void * )( ( const char * )lp -   sizeof( unsigned long ) ); }
         if( ( l & 0x0000FF00 ) == 0 ) { return ( void * )( ( const char * )lp - ( sizeof( unsigned long ) - 1 ) ); }

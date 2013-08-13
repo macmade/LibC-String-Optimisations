@@ -400,6 +400,23 @@ _memchr64:
     
     .aligned:
         
+        ; Saves RDX as we are going to alter it
+        xchg        rdx,    r8
+        
+        ; Creates the magic number allowing to test if a QWORD contains a
+        ; byte - Thanks to Sean Eron Anderson:
+        ; http://graphics.stanford.edu/~seander/bithacks.html
+        xor         rdx,    rdx
+        xor         rax,    rax
+        not         rax
+        mov         rcx,    255
+        div         rcx
+        mul         rsi
+        mov         r10,    rax
+        
+        ; Restores RDX
+        xchg        rdx,    r8
+        
         ; Fill all 8 parts of RSI with the 8 bits to search
         mov         rcx,    rsi
         shl         rsi,    8
@@ -421,9 +438,31 @@ _memchr64:
         cmp         rdx,    8
         jb          .aligned_end
         
-        ; Reads 8 bytes from RDI and xor them with RSI, so matching bytes
-        ; will be zero
+        ; Reads 8 bytes from RDI
         mov         rax,    [ rdi ]
+        
+        ; Checks if the current QWORD contains the byte to search (magic number
+        ; is in R10) - Thanks to Sean Eron Anderson:
+        ; http://graphics.stanford.edu/~seander/bithacks.html
+        mov         r8,     rax
+        xor         r8,     r10
+        mov         r9,     r8
+        not         r9
+        mov         rcx,    0x0101010101010101
+        sub         r8,     rcx
+        mov         rcx,    0x8080808080808080
+        and         r9,     rcx
+        test        r8,     r9
+        jnz         .aligned_found
+        
+        ; Not found, process next 8 bytes
+        add         rdi,    8
+        sub         rdx,    8
+        jmp         .aligned_loop
+        
+    .aligned_found:
+        
+        ; XOR the bytes read with RSI, so matching bytes will be zero
         xor         rax,    rsi
         
         ; Checks if the character was found
