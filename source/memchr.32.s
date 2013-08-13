@@ -389,9 +389,10 @@ _memchr32:
     push    ebp
     mov     ebp,        esp
     
-    ; Saves EDI and ESI as we are going to use them
+    ; Saves EDI, ESI and EBX as we are going to use them
     push    edi
     push    esi
+    push    ebx
     
     ; Gets the arguments from the stack
     mov     edi,        [ ebp +  8 ]
@@ -421,6 +422,23 @@ _memchr32:
     
     .aligned:
         
+        ; Saves EDX as we are going to alter it
+        push        edx
+        
+        ; Creates the magic number allowing to test if a QWORD contains a
+        ; byte - Thanks to Sean Eron Anderson:
+        ; http://graphics.stanford.edu/~seander/bithacks.html
+        xor         edx,    edx
+        xor         eax,    eax
+        not         eax
+        mov         ecx,    255
+        div         ecx
+        mul         esi
+        mov         ebx,    eax
+        
+        ; Restores EDX
+        pop         edx
+        
         ; Fill all 4 parts of ESI with the 8 bits to search
         mov         ecx,    esi
         shl         esi,    8
@@ -439,9 +457,43 @@ _memchr32:
         cmp         edx,    4
         jb          .aligned_end
         
-        ; Reads 4 bytes from EDI and xor them with ESI, so matching bytes
-        ; will be zero
+        ; Reads 4 bytes from RDI
         mov         eax,    [ edi ]
+        
+        ; Saves EDI and ESI as we are going to alter them
+        push        edi
+        push        esi
+        
+        ; Checks if the current QWORD contains the byte to search (magic number
+        ; is in EBX) - Thanks to Sean Eron Anderson:
+        ; http://graphics.stanford.edu/~seander/bithacks.html
+        mov         edi,    eax
+        xor         edi,    ebx
+        mov         esi,    edi
+        not         esi
+        mov         ecx,    0x01010101
+        sub         edi,    ecx
+        mov         ecx,    0x80808080
+        and         esi,    ecx
+        test        edi,    esi
+        jnz         .aligned_found
+        
+        ; Restores registers
+        pop         esi
+        pop         edi
+        
+        ; Not found, process next 4 bytes
+        add         edi,    4
+        sub         edx,    4
+        jmp         .aligned_loop
+        
+    .aligned_found:
+        
+        ; Restores registers
+        pop         esi
+        pop         edi
+        
+        ; XOR the bytes read with ESI, so matching bytes will be zero
         xor         eax,    esi
         
         ; Checks if the character was found
@@ -517,6 +569,7 @@ _memchr32:
         mov         eax,    edi
         
         ; Restores saved registers
+        pop         ebx
         pop         esi
         pop         edi
         pop         ebp
@@ -529,6 +582,7 @@ _memchr32:
         xor         eax,    eax
         
         ; Restores saved registers
+        pop         ebx
         pop         esi
         pop         edi
         pop         ebp
