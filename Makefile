@@ -62,7 +62,7 @@
 AS  := yasm
 CC  := clang
 
-all: strlen memset strchr memchr
+all: strlen memset strchr memchr memcpy
 	
 	@:
 
