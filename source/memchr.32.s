@@ -389,13 +389,9 @@ _memchr32:
     push    ebp
     mov     ebp,        esp
     
-    ; Saves EDI, ESI and EBX as we are going to use them
+    ; Saves EDI and ESI as we are going to use them
     push    edi
     push    esi
-    push    ebx
-    
-    ; Resets EBX
-    xor         ebx,    ebx
     
     ; Gets the arguments from the stack
     mov     edi,        [ ebp +  8 ]
@@ -496,10 +492,10 @@ _memchr32:
         jz          .null
         
         ; Reads a byte from EDI
-        mov         bl,     [ edi ]
+        mov         al,     [ edi ]
         
         ; Checks if the character is found
-        cmp         ebx,    esi
+        cmp         eax,    esi
         je          .found
         
         ; Advances the memory pointer and decreases the buffer size
@@ -522,7 +518,6 @@ _memchr32:
         mov         eax,    edi
         
         ; Restores saved registers
-        pop         ebx
         pop         esi
         pop         edi
         pop         ebp
@@ -535,7 +530,6 @@ _memchr32:
         xor         eax,    eax
         
         ; Restores saved registers
-        pop         ebx
         pop         esi
         pop         edi
         pop         ebp
