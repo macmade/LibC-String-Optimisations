@@ -384,4 +384,339 @@ _memchr32_sse2:
 ;-------------------------------------------------------------------------------   
 _memchr32:
     
-    ret
+    ; Creates a stack frame, so we can save registers, making them available
+    ; to use. Otherwise, only 3 registers are safe, which is not enough here
+    push    ebp
+    mov     ebp,        esp
+    
+    ; Saves EDI, ESI and EBX as we are going to use them
+    push    edi
+    push    esi
+    push    ebx
+    
+    ; Resets EBX
+    xor         ebx,    ebx
+    
+    ; Gets the arguments from the stack
+    mov     edi,        [ ebp +  8 ]
+    mov     esi,        [ ebp + 12 ]
+    mov     edx,        [ ebp + 16 ]
+    
+    ; Checks for a NULL buffer
+    test        edi,    edi
+    jz          .null
+    
+    ; Ensures the character to search is 8 bits
+    and         esi,    0xFF
+    
+    ; Stores the original memory pointer in EBX and ECX
+    mov         ecx,    edi
+    
+    ; Aligns the pointer in EBX to a 4-byte boundary
+    and         ebx,    -4
+    
+    ; Gets the number of misaligned bytes in the original memory pointer (EDI)
+    sub         ecx,    edi
+    
+    ; Checks if we're aligned
+    test        ecx,    ecx
+    jnz         .notaligned
+    
+    .aligned:
+        
+        ; Buffer limit is now in ESI - This will save EDX for later, as
+        ; we need to access it lower 8 bits part
+        xchg        esi,    edx
+        
+    .aligned_loop:
+        
+        ; Checks if we've reached the buffer size limit
+        test        esi,    esi
+        jz          .null
+        
+        ; Checks if we can read 12 bytes at a time
+        cmp         esi,    12
+        jb          .aligned_4
+        
+    .aligned_12:
+        
+        ; Reads 12 bytes from EDI
+        mov         eax,    [ edi ]
+        mov         ebx,    [ edi + 4 ]
+        mov         ecx,    [ edi + 8 ]
+        
+        ; Checks if the character is found
+        cmp         al,     dl
+        je          .found
+        
+        ; Advances the memory pointer and decreases the buffer size
+        add         edi,    1
+        sub         esi,    1
+        
+        ; We'll process the next 8 bytes from EAX
+        shr         eax,    8
+        
+        ; Checks if we've reached the buffer size limit
+        test        esi,    esi
+        jz          .null
+        
+        ; Checks if the character is found
+        cmp         al,     dl
+        je          .found
+        
+        ; Advances the memory pointer and decreases the buffer size
+        add         edi,    1
+        sub         esi,    1
+        
+        ; We'll process the next 8 bytes from EAX
+        shr         eax,    8
+        
+        ; Checks if we've reached the buffer size limit
+        test        esi,    esi
+        jz          .null
+        
+        ; Checks if the character is found
+        cmp         al,     dl
+        je          .found
+        
+        ; Advances the memory pointer and decreases the buffer size
+        add         edi,    1
+        sub         esi,    1
+        
+        ; We'll process the next 8 bytes from EAX
+        shr         eax,    8
+        
+        ; Checks if we've reached the buffer size limit
+        test        esi,    esi
+        jz          .null
+        
+        ; Checks if the character is found
+        cmp         al,     dl
+        je          .found
+        
+        ; Advances the memory pointer and decreases the buffer size
+        add         edi,    1
+        sub         esi,    1
+        
+        ; Checks if the character is found
+        cmp         bl,     dl
+        je          .found
+        
+        ; Advances the memory pointer and decreases the buffer size
+        add         edi,    1
+        sub         esi,    1
+        
+        ; We'll process the next 8 bytes from EBX
+        shr         ebx,    8
+        
+        ; Checks if we've reached the buffer size limit
+        test        esi,    esi
+        jz          .null
+        
+        ; Checks if the character is found
+        cmp         bl,     dl
+        je          .found
+        
+        ; Advances the memory pointer and decreases the buffer size
+        add         edi,    1
+        sub         esi,    1
+        
+        ; We'll process the next 8 bytes from EBX
+        shr         ebx,    8
+        
+        ; Checks if we've reached the buffer size limit
+        test        esi,    esi
+        jz          .null
+        
+        ; Checks if the character is found
+        cmp         bl,     dl
+        je          .found
+        
+        ; Advances the memory pointer and decreases the buffer size
+        add         edi,    1
+        sub         esi,    1
+        
+        ; We'll process the next 8 bytes from EBX
+        shr         ebx,    8
+        
+        ; Checks if we've reached the buffer size limit
+        test        esi,    esi
+        jz          .null
+        
+        ; Checks if the character is found
+        cmp         bl,     dl
+        je          .found
+        
+        ; Advances the memory pointer and decreases the buffer size
+        add         edi,    1
+        sub         esi,    1
+        
+        ; Checks if the character is found
+        cmp         cl,     dl
+        je          .found
+        
+        ; Advances the memory pointer and decreases the buffer size
+        add         edi,    1
+        sub         esi,    1
+        
+        ; We'll process the next 8 bytes from ECX
+        shr         ecx,    8
+        
+        ; Checks if we've reached the buffer size limit
+        test        esi,    esi
+        jz          .null
+        
+        ; Checks if the character is found
+        cmp         cl,     dl
+        je          .found
+        
+        ; Advances the memory pointer and decreases the buffer size
+        add         edi,    1
+        sub         esi,    1
+        
+        ; We'll process the next 8 bytes from ECX
+        shr         ecx,    8
+        
+        ; Checks if we've reached the buffer size limit
+        test        esi,    esi
+        jz          .null
+        
+        ; Checks if the character is found
+        cmp         cl,     dl
+        je          .found
+        
+        ; Advances the memory pointer and decreases the buffer size
+        add         edi,    1
+        sub         esi,    1
+        
+        ; We'll process the next 8 bytes from ECX
+        shr         ecx,    8
+        
+        ; Checks if we've reached the buffer size limit
+        test        esi,    esi
+        jz          .null
+        
+        ; Checks if the character is found
+        cmp         cl,     dl
+        je          .found
+        
+        ; Advances the memory pointer and decreases the buffer size
+        add         edi,    1
+        sub         esi,    1
+        
+        ; Not found - Continues scanning
+        jmp         .aligned_loop
+        
+    .aligned_4:
+        
+        ; Reads 4 bytes from EDI
+        mov         eax,    [ edi ]
+        
+        ; Checks if the character is found
+        cmp         al,     dl
+        je          .found
+        
+        ; Advances the memory pointer and decreases the buffer size
+        add         edi,    1
+        sub         esi,    1
+        
+        ; We'll process the next 8 bytes from EAX
+        shr         eax,    8
+        
+        ; Checks if we've reached the buffer size limit
+        test        esi,    esi
+        jz          .null
+        
+        ; Checks if the character is found
+        cmp         al,     dl
+        je          .found
+        
+        ; Advances the memory pointer and decreases the buffer size
+        add         edi,    1
+        sub         esi,    1
+        
+        ; We'll process the next 8 bytes from EAX
+        shr         eax,    8
+        
+        ; Checks if we've reached the buffer size limit
+        test        esi,    esi
+        jz          .null
+        
+        ; Checks if the character is found
+        cmp         al,     dl
+        je          .found
+        
+        ; Advances the memory pointer and decreases the buffer size
+        add         edi,    1
+        sub         esi,    1
+        
+        ; We'll process the next 8 bytes from EAX
+        shr         eax,    8
+        
+        ; Checks if we've reached the buffer size limit
+        test        esi,    esi
+        jz          .null
+        
+        ; Checks if the character is found
+        cmp         al,     dl
+        je          .found
+        
+        ; Advances the memory pointer and decreases the buffer size
+        add         edi,    1
+        sub         esi,    1
+        
+        ; Not found - Continues scanning
+        jmp         .aligned_loop
+        
+    .notaligned:
+        
+        ; Checks if we've reached the buffer size limit
+        test        edx,    edx
+        jz          .null
+        
+        ; Reads a byte from EDI
+        mov         bl,     [ edi ]
+        
+        ; Checks if the character is found
+        cmp         ebx,    esi
+        je          .found
+        
+        ; Advances the memory pointer and decreases the buffer size
+        add         edi,    1
+        sub         ecx,    1
+        
+        ; Decreases the number of time we need to loop until we're aligned
+        sub         edx,    1
+        
+        ; Checks if we're aligned
+        test        ecx,    ecx
+        jz          .aligned
+        
+        ; Not aligned - Continues scanning
+        jmp         .notaligned
+        
+    .found:
+        
+        ; Address of the found character
+        mov         eax,    edi
+        
+        ; Restores saved registers
+        pop         ebx
+        pop         esi
+        pop         edi
+        pop         ebp
+        
+        ret
+        
+    .null:
+        
+        ; Returns NULL
+        xor         eax,    eax
+        
+        ; Restores saved registers
+        pop         ebx
+        pop         esi
+        pop         edi
+        pop         ebp
+        
+        ret
