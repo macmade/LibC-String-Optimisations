@@ -63,12 +63,71 @@
 
 #include <stdlib.h>
 
-void * xeos_memchr_c( const void * s, int c, size_t n );
-void * xeos_memchr_c( const void * s, int c, size_t n )
+void * xeos_memchr_c( const void * p, int c, size_t n );
+void * xeos_memchr_c( const void * p, int c, size_t n )
 {
-    ( void )s;
-    ( void )c;
-    ( void )n;
+    const unsigned char * cp;
+    const unsigned long * lp;
+    unsigned long         l;
+    unsigned long         mask;
+    
+    if( p == NULL || n == 0 )
+    {
+        return NULL;
+    }
+    
+    cp = p;
+    c &= 0xFF;
+    
+    while( n > 0 && ( ( ( uintptr_t )cp & ( uintptr_t )-sizeof( unsigned long ) ) < ( uintptr_t )cp ) )
+    {
+        if( *( cp++ ) == ( unsigned char )c )
+        {
+            return ( void * )( cp - 1 );
+        }
+        
+        n--;
+    }
+    
+    lp   = ( const unsigned long * )( ( void * )cp );
+    mask = ( unsigned long )c << 24
+         | ( unsigned long )c << 16
+         | ( unsigned long )c << 8
+         | ( unsigned long )c;
+    
+    #ifdef __LP64__
+    mask = mask << 32 | mask;
+    #endif
+    
+    while( n > sizeof( unsigned long ) )
+    {
+        l  = *( lp++ ) ^ mask;
+        n -= sizeof( unsigned long );
+        
+        if( ( l & 0x000000FF ) == 0 ) { return ( void * )( ( const char * )lp -   sizeof( unsigned long ) ); }
+        if( ( l & 0x0000FF00 ) == 0 ) { return ( void * )( ( const char * )lp - ( sizeof( unsigned long ) - 1 ) ); }
+        if( ( l & 0x00FF0000 ) == 0 ) { return ( void * )( ( const char * )lp - ( sizeof( unsigned long ) - 2 ) ); }
+        if( ( l & 0xFF000000 ) == 0 ) { return ( void * )( ( const char * )lp - ( sizeof( unsigned long ) - 3 ) ); }
+        
+        #ifdef __LP64__
+        
+        if( ( l & 0x000000FF00000000 ) == 0 ) { return ( void * )( ( const char * )lp - ( sizeof( unsigned long ) - 4 ) ); }
+        if( ( l & 0x0000FF0000000000 ) == 0 ) { return ( void * )( ( const char * )lp - ( sizeof( unsigned long ) - 5 ) ); }
+        if( ( l & 0x00FF000000000000 ) == 0 ) { return ( void * )( ( const char * )lp - ( sizeof( unsigned long ) - 6 ) ); }
+        if( ( l & 0xFF00000000000000 ) == 0 ) { return ( void * )( ( const char * )lp - ( sizeof( unsigned long ) - 7 ) ); }
+        
+        #endif
+    }
+    
+    cp = ( unsigned char * )( ( void * )lp );
+    
+    while( n-- )
+    {
+        if( *( cp++ ) == ( unsigned char )c )
+        {
+            return ( void * )( cp - 1 );
+        }
+    }
     
     return NULL;
 }
