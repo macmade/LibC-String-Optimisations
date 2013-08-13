@@ -377,4 +377,185 @@ _memchr64_sse2:
 ;-------------------------------------------------------------------------------
 _memchr64:
     
-    ret
+    ; Checks for a NULL buffer
+    test        rdi,    rdi
+    jz          .null
+    
+    ; Ensures the character to search is 8 bits
+    and         rsi,    0xFF
+    
+    ; Stores the original memory pointer in RCX
+    mov         rcx,    rdi
+    
+    ; Aligns the pointer in RCX to a 8-byte boundary
+    and         rcx,    -8
+    
+    ; Gets the number of misaligned bytes in the original memory pointer (RDI)
+    sub         rcx,    rdi
+    
+    ; Checks if we're aligned
+    test        rcx,    rcx
+    jnz         .notaligned
+    
+    .aligned:
+        
+        ; Fill all 8 parts of RSI with the 8 bits to search
+        mov         rcx,    rsi
+        shl         rsi,    8
+        or          rsi,    rcx
+        mov         rcx,    rsi
+        shl         rsi,    16
+        or          rsi,    rcx
+        mov         rcx,    rsi
+        shl         rsi,    32
+        or          rsi,    rcx
+        
+    .aligned_loop:
+        
+        ; Reads 8 bytes from RDI and xor them with RSI, so matching bytes
+        ; will be zero
+        mov         rax,    [ rdi ]
+        xor         rax,    rsi
+        
+        ; Checks if the character was found
+        test        al,     al
+        jz          .found
+        
+        ; Advances the memory pointer and decreases the buffer size
+        add         rdi,    1
+        sub         rdx,    1
+        
+        ; Checks if we've reached the buffer size limit
+        test        rdx,    rdx
+        jz          .null
+        
+        ; Checks if the character was found in the next byte
+        shr         rax,    8
+        test        al,     al
+        jz          .found
+        
+        ; Advances the memory pointer and decreases the buffer size
+        add         rdi,    1
+        sub         rdx,    1
+        
+        ; Checks if we've reached the buffer size limit
+        test        rdx,    rdx
+        jz          .null
+        
+        ; Checks if the character was found in the next byte
+        shr         rax,    8
+        test        al,     al
+        jz          .found
+        
+        ; Advances the memory pointer and decreases the buffer size
+        add         rdi,    1
+        sub         rdx,    1
+        
+        ; Checks if we've reached the buffer size limit
+        test        rdx,    rdx
+        jz          .null
+        
+        ; Checks if the character was found in the next byte
+        shr         rax,    8
+        test        al,     al
+        jz          .found
+        
+        ; Advances the memory pointer and decreases the buffer size
+        add         rdi,    1
+        sub         rdx,    1
+        
+        ; Checks if we've reached the buffer size limit
+        test        rdx,    rdx
+        jz          .null
+        
+        ; Checks if the character was found in the next byte
+        shr         rax,    8
+        test        al,     al
+        jz          .found
+        
+        ; Advances the memory pointer and decreases the buffer size
+        add         rdi,    1
+        sub         rdx,    1
+        
+        ; Checks if we've reached the buffer size limit
+        test        rdx,    rdx
+        jz          .null
+        
+        ; Checks if the character was found in the next byte
+        shr         rax,    8
+        test        al,     al
+        jz          .found
+        
+        ; Advances the memory pointer and decreases the buffer size
+        add         rdi,    1
+        sub         rdx,    1
+        
+        ; Checks if we've reached the buffer size limit
+        test        rdx,    rdx
+        jz          .null
+        
+        ; Checks if the character was found in the next byte
+        shr         rax,    8
+        test        al,     al
+        jz          .found
+        
+        ; Advances the memory pointer and decreases the buffer size
+        add         rdi,    1
+        sub         rdx,    1
+        
+        ; Checks if we've reached the buffer size limit
+        test        rdx,    rdx
+        jz          .null
+        
+        ; Checks if the character was found in the next byte
+        shr         rax,    8
+        test        al,     al
+        jz          .found
+        
+        ; Advances the memory pointer and decreases the buffer size
+        add         rdi,    1
+        sub         rdx,    1
+        
+        ; Not found - Continues scanning
+        jmp         .aligned_loop
+        
+    .notaligned:
+        
+        ; Checks if we've reached the buffer size limit
+        test        rdx,    rdx
+        jz          .null
+        
+        ; Reads a byte from RDI
+        mov         al,     [ rdi ]
+        
+        ; Checks if the character is found
+        cmp         rax,    rsi
+        je          .found
+        
+        ; Advances the memory pointer and decreases the buffer size
+        add         rdi,    1
+        sub         rcx,    1
+        
+        ; Decreases the number of time we need to loop until we're aligned
+        sub         rdx,    1
+        
+        ; Checks if we're aligned
+        test        rcx,    rcx
+        jz          .aligned
+        
+        ; Not aligned - Continues scanning
+        jmp         .notaligned
+        
+    .found:
+        
+        ; Address of the found character
+        mov         rax,    rdi
+        
+        ret
+        
+    .null:
+        
+        ; Returns NULL
+        xor         rax,    rax
+        
+        ret

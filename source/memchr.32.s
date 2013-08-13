@@ -430,7 +430,7 @@ _memchr32:
         
     .aligned_loop:
         
-        ; Reads 4 bytes from EDI and xor them with ESI, so matching 8 bytes
+        ; Reads 8 bytes from RDI and xor them with RSI, so matching bytes
         ; will be zero
         mov         eax,    [ edi ]
         xor         eax,    esi
