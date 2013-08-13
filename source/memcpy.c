@@ -149,12 +149,66 @@ void * xeos_memcpy_c( void * restrict s1, const void * restrict s2, size_t n )
         }
         else
         {
-            cp1 = ( void * )lp1;
-            cp2 = ( void * )lp2;
-            
-            while( n-- )
             {
-                *( cp1++ ) = *( cp2++ );
+                unsigned long l1;
+                unsigned long l2;
+                
+                while( n > 0 && ( ( ( uintptr_t )cp1 & ( uintptr_t )-sizeof( unsigned long ) ) < ( uintptr_t )cp1 ) )
+                {
+                    *( cp1++ ) = *( cp2++ );
+                    
+                    n--;
+                }
+                
+                lp1 = ( void * )cp1;
+                
+                while( n >= sizeof( unsigned long ) * 2 )
+                {
+                    #ifdef __LP64__
+                    
+                    l1 = ( unsigned long )cp2[  7 ] << 56
+                       | ( unsigned long )cp2[  6 ] << 48
+                       | ( unsigned long )cp2[  5 ] << 40
+                       | ( unsigned long )cp2[  4 ] << 32
+                       | ( unsigned long )cp2[  3 ] << 24
+                       | ( unsigned long )cp2[  2 ] << 16
+                       | ( unsigned long )cp2[  1 ] << 8
+                       | ( unsigned long )cp2[  0 ];
+                    l2 = ( unsigned long )cp2[ 15 ] << 56
+                       | ( unsigned long )cp2[ 14 ] << 48
+                       | ( unsigned long )cp2[ 13 ] << 40
+                       | ( unsigned long )cp2[ 12 ] << 32
+                       | ( unsigned long )cp2[ 11 ] << 24
+                       | ( unsigned long )cp2[ 10 ] << 16
+                       | ( unsigned long )cp2[  9 ] << 8
+                       | ( unsigned long )cp2[  8 ];
+                      
+                    #else
+                    
+                    l1 = ( unsigned long )cp2[ 3 ] << 24
+                       | ( unsigned long )cp2[ 2 ] << 16
+                       | ( unsigned long )cp2[ 1 ] << 8
+                       | ( unsigned long )cp2[ 0 ];
+                    l2 = ( unsigned long )cp2[ 7 ] << 24
+                       | ( unsigned long )cp2[ 6 ] << 16
+                       | ( unsigned long )cp2[ 5 ] << 8
+                       | ( unsigned long )cp2[ 4 ];
+                      
+                    #endif
+                    
+                    lp1[ 0 ]   = l1;
+                    lp1[ 1 ]   = l2;
+                    lp1       += 2;
+                    cp2       += sizeof( unsigned long ) * 2;
+                    n         -= sizeof( unsigned long ) * 2;
+                }
+                
+                cp1 = ( void * )lp1;
+                
+                while( n-- )
+                {
+                    *( cp1++ ) = *( cp2++ );
+                }
             }
         }
     }
