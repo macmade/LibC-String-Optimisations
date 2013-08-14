@@ -175,8 +175,183 @@ _xeos_memcpy:
 ;-------------------------------------------------------------------------------
 _memcpy64_sse2:
     
-    mov     rax,    rdi
-    ret
+    ; Saves the original memory pointer, as we'll need to return it
+    mov         r8,         rdi
+    
+    ; Checks for a NULL destination pointer
+    test        rdi,        rdi
+    jz          .ret
+    
+    ; Checks for a NULL source pointer
+    test        rsi,        rsi
+    jz          .ret
+    
+    ; Gets the number of misaligned bytes in the original source pointer
+    mov         rax,        rsi
+    mov         rcx,        rsi
+    and         rax,        -16
+    sub         rcx,        rax
+    
+    ; Checks if the source pointer is already aligned
+    test        rcx,        rcx
+    jnz         .source_notaligned
+        
+    .source_aligned:
+        
+        ; Gets the number of misaligned bytes in the original destination pointer
+        mov         rax,        rdi
+        mov         rcx,        rdi
+        and         rax,        -16
+        sub         rcx,        rax
+        
+        ; Checks if the destination pointer is also aligned
+        test        rcx,        rcx
+        jnz         .dest_notaligned
+        
+        .dest_aligned:
+            
+            ; Writes 128 bytes at a time, if possible
+            cmp         rdx,        128
+            jb          .dest_aligned_64
+            
+            .dest_aligned_128:
+                
+                ; Reads 128 bytes from the source buffer
+                movdqa      xmm0,           [ rsi ]
+                movdqa      xmm1,           [ rsi + 16 ]
+                movdqa      xmm2,           [ rsi + 32 ]
+                movdqa      xmm3,           [ rsi + 48 ]
+                movdqa      xmm4,           [ rsi + 64 ]
+                movdqa      xmm5,           [ rsi + 80 ]
+                movdqa      xmm6,           [ rsi + 96 ]
+                movdqa      xmm7,           [ rsi + 112 ]
+                
+                ; Writes 128 bytes into the destination buffer
+                movdqa      [ rdi ],        xmm0
+                movdqa      [ rdi +  16 ],  xmm1
+                movdqa      [ rdi +  32 ],  xmm2
+                movdqa      [ rdi +  48 ],  xmm3
+                movdqa      [ rdi +  64 ],  xmm4
+                movdqa      [ rdi +  80 ],  xmm5
+                movdqa      [ rdi +  96 ],  xmm6
+                movdqa      [ rdi + 112 ],  xmm7
+                
+                ; Advances the source and destination pointers and decreases
+                ; the number of bytes to write
+                add         rdi,        128
+                add         rsi,        128
+                sub         rdx,        128
+                
+                ; Writes 128 bytes at a time, if possible
+                cmp         rdx,        128
+                jge         .dest_aligned_128
+            
+            .dest_aligned_64:
+                
+                ; Writes 64 bytes at a time, if possible
+                cmp         rdx,        64
+                jb          .dest_aligned_16
+                
+                ; Reads 64 bytes from the source buffer
+                movdqa      xmm0,           [ rsi ]
+                movdqa      xmm1,           [ rsi + 16 ]
+                movdqa      xmm2,           [ rsi + 32 ]
+                movdqa      xmm3,           [ rsi + 48 ]
+                
+                ; Writes 64 bytes into the destination buffer
+                movdqa      [ rdi ],        xmm0
+                movdqa      [ rdi +  16 ],  xmm1
+                movdqa      [ rdi +  32 ],  xmm2
+                movdqa      [ rdi +  48 ],  xmm3
+                
+                ; Advances the source and destination pointers and decreases
+                ; the number of bytes to write
+                add         rdi,        64
+                add         rsi,        64
+                sub         rdx,        64
+                
+                ; Continues writing
+                jmp         .dest_aligned_64
+                
+            .dest_aligned_16:
+                
+                ; Writes 16 bytes at a time, if possible
+                cmp         rdx,        16
+                jb          .copy_end
+                
+                ; Reads 16 bytes from the source buffer
+                movdqa      xmm0,       [ rsi ]
+                
+                ; Writes 16 bytes into the destination buffer
+                movdqa      [ rdi ],    xmm0
+                
+                ; Advances the source and destination pointers and decreases
+                ; the number of bytes to write
+                add         rdi,        16
+                add         rsi,        16
+                sub         rdx,        16
+                
+                ; Continues writing
+                jmp         .dest_aligned_16
+                
+        .dest_notaligned:
+            
+            
+    
+    .copy_end:
+        
+        ; Checks if we have bytes to write
+        test        rdx,        rdx
+        jz          .ret
+        
+        ; Reads a byte from the source buffer
+        mov         al,         [ rsi ]
+        
+        ; Writes a byte into the destination buffer
+        mov         [ rdi ],    al
+        
+        ; Advances the source and destination pointers and decreases
+        ; the number of bytes to write
+        add         rdi,        1
+        add         rsi,        1
+        sub         rdx,        1
+        sub         rcx,        1
+        
+        ; Not aligned - Continues writing single bytes
+        jmp         .copy_end
+        
+    .source_notaligned:
+        
+        ; Checks if we have bytes to write
+        test        rdx,        rdx
+        jz          .ret
+        
+        ; Reads a byte from the source buffer
+        mov         al,         [ rsi ]
+        
+        ; Writes a byte into the destination buffer
+        mov         [ rdi ],    al
+        
+        ; Advances the source and destination pointers and decreases
+        ; the number of bytes to write
+        add         rdi,        1
+        add         rsi,        1
+        sub         rdx,        1
+        sub         rcx,        1
+        
+        ; Checks if we're aligned
+        test        rcx,        rcx
+        jz          .source_aligned
+        
+        ; Not aligned - Continues writing single bytes
+        jmp         .source_notaligned
+        
+    .ret:
+        
+        ; Returns the original destination pointer
+        mov         rax,    r8
+        
+        ret
         
 ;-------------------------------------------------------------------------------
 ; 64-bits optimized memcpy() function
