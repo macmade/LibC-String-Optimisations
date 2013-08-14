@@ -155,18 +155,16 @@ void * xeos_memcpy_c( void * restrict s1, const void * restrict s2, size_t n )
         else
         {
             {
-                unsigned long l1;
-                unsigned long l2;
+                unsigned long l1[ 8 ];
+                unsigned long l2[ 8 ];
                 size_t        diff;
                 size_t        i;
                 size_t        ls;
                 size_t        rs;
                 
                 diff = 0;
-                l1   = 0;
-                l2   = 0;
                 
-                if( n >= sizeof( long ) * 5 )
+                if( n >= sizeof( long ) * 9 )
                 {
                     /* Number of bytes to write one by one until the destination is aligned on a long */
                     diff = sizeof( unsigned long ) - ( ( uintptr_t )cp1 - ( ( uintptr_t )cp1 & ( uintptr_t )-sizeof( unsigned long ) ) );
@@ -176,42 +174,52 @@ void * xeos_memcpy_c( void * restrict s1, const void * restrict s2, size_t n )
                     rs = 8 * diff;
                     
                     /* Reads a long, and saves the remaining bytes that we'll have to write */
-                    l1   = *( lp2++ );
-                    l2   = l1 >> ( diff * 8 );
+                    l1[ 0 ] = *( lp2++ );
+                    l2[ 0 ] = l1[ 0 ] >> ( diff * 8 );
                     
                     /* Writes bytes one by one until the destination is aligned on a long */
                     for( i = 0; i < diff; i++ )
                     {
-                        *( cp1++ ) = ( unsigned char )( ( l1 >> ( i * 8 ) ) & 0xFF );
+                        *( cp1++ ) = ( unsigned char )( ( l1[ 0 ] >> ( i * 8 ) ) & 0xFF );
                     }
                     
-                    n -= sizeof( long );
-                    
+                    n  -= sizeof( long );
                     lp1 = ( void * )cp1;
                     
-                    /* Writes 4 longs into the aligned destination, saving the remaining bytes */
-                    while( n > sizeof( long ) * 4 )
+                    /* Writes 8 longs into the aligned destination, saving the remaining bytes */
+                    while( n > sizeof( long ) * 8 )
                     {
-                        l1       = lp2[ 0 ];
-                        lp1[ 0 ] = ( l1 << ls ) | l2;
-                        l2       = l1 >> rs;
+                        l1[ 0 ]  = lp2[ 0 ];
+                        l1[ 1 ]  = lp2[ 1 ];
+                        l1[ 2 ]  = lp2[ 2 ];
+                        l1[ 3 ]  = lp2[ 3 ];
+                        l1[ 4 ]  = lp2[ 4 ];
+                        l1[ 5 ]  = lp2[ 5 ];
+                        l1[ 6 ]  = lp2[ 6 ];
+                        l1[ 7 ]  = lp2[ 7 ];
                         
-                        l1       = lp2[ 1 ];
-                        lp1[ 1 ] = ( l1 << ls ) | l2;
-                        l2       = l1 >> rs;
+                        l2[ 1 ]  = l1[ 0 ] >> rs;
+                        l2[ 2 ]  = l1[ 1 ] >> rs;
+                        l2[ 3 ]  = l1[ 2 ] >> rs;
+                        l2[ 4 ]  = l1[ 3 ] >> rs;
+                        l2[ 5 ]  = l1[ 4 ] >> rs;
+                        l2[ 6 ]  = l1[ 5 ] >> rs;
+                        l2[ 7 ]  = l1[ 6 ] >> rs;
+                        l2[ 0 ]  = l1[ 7 ] >> rs;
                         
-                        l1       = lp2[ 2 ];
-                        lp1[ 2 ] = ( l1 << ls ) | l2;
-                        l2       = l1 >> rs;
+                        lp1[ 0 ] = ( l1[ 0 ] << ls ) | l2[ 0 ];
+                        lp1[ 1 ] = ( l1[ 1 ] << ls ) | l2[ 1 ];
+                        lp1[ 2 ] = ( l1[ 2 ] << ls ) | l2[ 2 ];
+                        lp1[ 3 ] = ( l1[ 3 ] << ls ) | l2[ 3 ];
+                        lp1[ 4 ] = ( l1[ 4 ] << ls ) | l2[ 4 ];
+                        lp1[ 5 ] = ( l1[ 5 ] << ls ) | l2[ 5 ];
+                        lp1[ 6 ] = ( l1[ 6 ] << ls ) | l2[ 6 ];
+                        lp1[ 7 ] = ( l1[ 7 ] << ls ) | l2[ 7 ];
                         
-                        l1       = lp2[ 3 ];
-                        lp1[ 3 ] = ( l1 << ls ) | l2;
-                        l2       = l1 >> rs;
+                        lp1 += 8;
+                        lp2 += 8;
                         
-                        lp1 += 4;
-                        lp2 += 4;
-                        
-                        n -= sizeof( long ) * 4;
+                        n -= sizeof( long ) * 8;
                     }
                 }
                 
@@ -225,8 +233,8 @@ void * xeos_memcpy_c( void * restrict s1, const void * restrict s2, size_t n )
                     
                     while( diff-- )
                     {
-                        *( cp1++ ) = ( unsigned char )( l2 & 0xFF );
-                        l2         = l2 >> 8;
+                        *( cp1++ ) = ( unsigned char )( l2[ 0 ] & 0xFF );
+                        l2[ 0 ]    = l2[ 0 ] >> 8;
                     }
                 }
                 
