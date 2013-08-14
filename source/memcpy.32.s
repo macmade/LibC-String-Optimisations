@@ -476,12 +476,251 @@ _memcpy32:
     mov     esi,        [ ebp + 12 ]
     mov     edx,        [ ebp + 16 ]
     
-    mov     eax,        edi
+    ; Checks for a NULL destination pointer
+    test        edi,        edi
+    jz          .ret
     
-    ; Restores saved registers
-    pop         ebx
-    pop         esi
-    pop         edi
-    pop         ebp
+    ; Checks for a NULL source pointer
+    test        esi,        esi
+    jz          .ret
     
-    ret
+    ; Gets the number of misaligned bytes in the original source pointer
+    mov         eax,        esi
+    mov         ecx,        esi
+    and         ecx,        -4
+    sub         eax,        ecx
+    mov         ecx,        4
+    sub         ecx,        eax
+    
+    ; Checks if the source pointer is already aligned
+    cmp         ecx,        4
+    jne         .source_notaligned
+        
+    .source_aligned:
+        
+        ; IMPORTANT NOTE
+        ; 
+        ; At this point, the source pointer is aligned to a 8-byte boundary.
+        ; The destination pointer might not be.
+        ; As the x86/x86-64 architecture allows unaligned memory access,
+        ; let's pretend we don't care about this.
+        ; Of course, unaligned memory access might be slower, but the
+        ; destination pointer should be aligned most of the time.
+        ; Moreover, there's almost no performance penalty with recent CPUs
+        ; from Intel (Sandy Bridge, Nehalem).
+        
+        .source_dest_aligned:
+            
+            ; Writes 128 bytes at a time, if possible
+            cmp         edx,        128
+            jb          .source_dest_aligned_64
+            
+            .source_dest_aligned_128:
+                
+                ; Reads and writes 128 bytes from the source buffer into
+                ; the destination buffer
+                mov         eax,            [ esi ]
+                mov         ebx,            [ esi + 4 ]
+                mov         [ edi ],        eax
+                mov         [ edi + 4 ],    ebx
+                mov         eax,            [ esi + 8 ]
+                mov         ebx,            [ esi + 12 ]
+                mov         [ edi +  8 ],   eax
+                mov         [ edi + 12 ],   ebx
+                mov         eax,            [ esi + 16 ]
+                mov         ebx,            [ esi + 20 ]
+                mov         [ edi + 16 ],   eax
+                mov         [ edi + 20 ],   ebx
+                mov         eax,            [ esi + 24 ]
+                mov         ebx,            [ esi + 28 ]
+                mov         [ edi + 24 ],   eax
+                mov         [ edi + 28 ],   ebx
+                mov         eax,            [ esi + 32 ]
+                mov         ebx,            [ esi + 36 ]
+                mov         [ edi + 32 ],   eax
+                mov         [ edi + 36 ],   ebx
+                mov         eax,            [ esi + 40 ]
+                mov         ebx,            [ esi + 44 ]
+                mov         [ edi + 40 ],   eax
+                mov         [ edi + 44 ],   ebx
+                mov         eax,            [ esi + 48 ]
+                mov         ebx,            [ esi + 52 ]
+                mov         [ edi + 48 ],   eax
+                mov         [ edi + 52 ],   ebx
+                mov         eax,            [ esi + 56 ]
+                mov         ebx,            [ esi + 60 ]
+                mov         [ edi + 56 ],   eax
+                mov         [ edi + 60 ],   ebx
+                mov         eax,            [ esi + 64 ]
+                mov         ebx,            [ esi + 68 ]
+                mov         [ edi + 64 ],   eax
+                mov         [ edi + 68 ],   ebx
+                mov         eax,            [ esi + 72 ]
+                mov         ebx,            [ esi + 76 ]
+                mov         [ edi + 72 ],   eax
+                mov         [ edi + 76 ],   ebx
+                mov         eax,            [ esi + 80 ]
+                mov         ebx,            [ esi + 84 ]
+                mov         [ edi + 80 ],   eax
+                mov         [ edi + 84 ],   ebx
+                mov         eax,            [ esi + 88 ]
+                mov         ebx,            [ esi + 92 ]
+                mov         [ edi + 88 ],   eax
+                mov         [ edi + 92 ],   ebx
+                mov         eax,            [ esi + 96 ]
+                mov         ebx,            [ esi + 100 ]
+                mov         [ edi + 96 ],   eax
+                mov         [ edi + 100 ],  ebx
+                mov         eax,            [ esi + 104 ]
+                mov         ebx,            [ esi + 108 ]
+                mov         [ edi + 104 ],  eax
+                mov         [ edi + 108 ],  ebx
+                mov         eax,            [ esi + 112 ]
+                mov         ebx,            [ esi + 116 ]
+                mov         [ edi + 112 ],  eax
+                mov         [ edi + 116 ],  ebx
+                mov         eax,            [ esi + 120 ]
+                mov         ebx,            [ esi + 124 ]
+                mov         [ edi + 120 ],  eax
+                mov         [ edi + 124 ],  ebx
+                
+                ; Advances the source and destination pointers and decreases
+                ; the number of bytes to write
+                add         edi,        128
+                add         esi,        128
+                sub         edx,        128
+                
+                ; Writes 128 bytes at a time, if possible
+                cmp         edx,        128
+                jge         .source_dest_aligned_128
+            
+            .source_dest_aligned_64:
+                
+                ; Writes 64 bytes at a time, if possible
+                cmp         edx,        64
+                jb          .source_dest_aligned_8
+                
+                ; Reads and writes 128 bytes from the source buffer into
+                ; the destination buffer
+                mov         eax,            [ esi ]
+                mov         ebx,            [ esi + 4 ]
+                mov         [ edi ],        eax
+                mov         [ edi + 4 ],    ebx
+                mov         eax,            [ esi + 8 ]
+                mov         ebx,            [ esi + 12 ]
+                mov         [ edi +  8 ],   eax
+                mov         [ edi + 12 ],   ebx
+                mov         eax,            [ esi + 16 ]
+                mov         ebx,            [ esi + 20 ]
+                mov         [ edi + 16 ],   eax
+                mov         [ edi + 20 ],   ebx
+                mov         eax,            [ esi + 24 ]
+                mov         ebx,            [ esi + 28 ]
+                mov         [ edi + 24 ],   eax
+                mov         [ edi + 28 ],   ebx
+                mov         eax,            [ esi + 32 ]
+                mov         ebx,            [ esi + 36 ]
+                mov         [ edi + 32 ],   eax
+                mov         [ edi + 36 ],   ebx
+                mov         eax,            [ esi + 40 ]
+                mov         ebx,            [ esi + 44 ]
+                mov         [ edi + 40 ],   eax
+                mov         [ edi + 44 ],   ebx
+                mov         eax,            [ esi + 48 ]
+                mov         ebx,            [ esi + 52 ]
+                mov         [ edi + 48 ],   eax
+                mov         [ edi + 52 ],   ebx
+                mov         eax,            [ esi + 56 ]
+                mov         ebx,            [ esi + 60 ]
+                mov         [ edi + 56 ],   eax
+                mov         [ edi + 60 ],   ebx
+                
+                ; Advances the source and destination pointers and decreases
+                ; the number of bytes to write
+                add         edi,        64
+                add         esi,        64
+                sub         edx,        64
+                
+                ; Continues writing
+                jmp         .source_dest_aligned_64
+                
+            .source_dest_aligned_8:
+                
+                ; Writes 4 bytes at a time, if possible
+                cmp         edx,        4
+                jb          .copy_end
+                
+                ; Reads and writes 4 bytes from the source buffer into
+                ; the destination buffer
+                mov         eax,            [ esi ]
+                mov         [ edi ],        eax
+                
+                ; Advances the source and destination pointers and decreases
+                ; the number of bytes to write
+                add         edi,        4
+                add         esi,        4
+                sub         edx,        4
+                
+                ; Continues writing
+                jmp         .source_dest_aligned_8
+                
+    .copy_end:
+        
+        ; Checks if we have bytes to write
+        test        edx,        edx
+        jz          .ret
+        
+        ; Reads a byte from the source buffer
+        mov         al,         [ esi ]
+        
+        ; Writes a byte into the destination buffer
+        mov         [ edi ],    al
+        
+        ; Advances the source and destination pointers and decreases
+        ; the number of bytes to write
+        add         edi,        1
+        add         esi,        1
+        sub         edx,        1
+        sub         ecx,        1
+        
+        ; Not aligned - Continues writing single bytes
+        jmp         .copy_end
+        
+    .source_notaligned:
+        
+        ; Checks if we have bytes to write
+        test        edx,        edx
+        jz          .ret
+        
+        ; Reads a byte from the source buffer
+        mov         al,         [ esi ]
+        
+        ; Writes a byte into the destination buffer
+        mov         [ edi ],    al
+        
+        ; Advances the source and destination pointers and decreases
+        ; the number of bytes to write
+        add         edi,        1
+        add         esi,        1
+        sub         edx,        1
+        sub         ecx,        1
+        
+        ; Checks if we're aligned
+        test        ecx,        ecx
+        jz          .source_aligned
+        
+        ; Not aligned - Continues writing single bytes
+        jmp         .source_notaligned
+        
+    .ret:
+        
+        ; Returns the original destination pointer
+        mov         eax,    [ ebp + 8 ]
+        
+        ; Restores saved registers
+        pop         ebx
+        pop         esi
+        pop         edi
+        pop         ebp
+        
+        ret

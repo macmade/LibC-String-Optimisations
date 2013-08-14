@@ -558,7 +558,7 @@ _memcpy64:
                 cmp         rdx,        64
                 jb          .source_dest_aligned_8
                 
-                ; Reads and writes 128 bytes from the source buffer into
+                ; Reads and writes 64 bytes from the source buffer into
                 ; the destination buffer
                 mov         r8,             [ rsi ]
                 mov         r9,             [ rsi + 8 ]
@@ -588,11 +588,11 @@ _memcpy64:
                 
             .source_dest_aligned_8:
                 
-                ; Writes 16 bytes at a time, if possible
-                cmp         rdx,        16
+                ; Writes 8 bytes at a time, if possible
+                cmp         rdx,        8
                 jb          .copy_end
                 
-                ; Reads and writes 128 bytes from the source buffer into
+                ; Reads and writes 8 bytes from the source buffer into
                 ; the destination buffer
                 mov         r8,             [ rsi ]
                 mov         [ rdi ],        r8
