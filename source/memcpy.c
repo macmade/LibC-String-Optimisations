@@ -158,59 +158,80 @@ void * xeos_memcpy_c( void * restrict s1, const void * restrict s2, size_t n )
             {
                 unsigned long l1;
                 unsigned long l2;
+                size_t        diff;
+                size_t        i;
+                size_t        ls;
+                size_t        rs;
                 
-                while( n > 0 && ( ( ( uintptr_t )cp1 & ( uintptr_t )-sizeof( unsigned long ) ) < ( uintptr_t )cp1 ) )
+                diff = 0;
+                l1   = 0;
+                l2   = 0;
+                
+                if( n > sizeof( long ) * 5 )
                 {
-                    *( cp1++ ) = *( cp2++ );
+                    /* Number of bytes to write one by one until the destination is aligned on a long */
+                    diff = sizeof( unsigned long ) - ( ( uintptr_t )cp1 - ( ( uintptr_t )cp1 & ( uintptr_t )-sizeof( unsigned long ) ) );
                     
-                    n--;
-                }
-                
-                lp1 = ( void * )cp1;
-                
-                while( n >= sizeof( unsigned long ) * 2 )
-                {
-                    #ifdef __LP64__
+                    /* Computes left and right shifts now, to save processing time */
+                    ls = 8 * ( sizeof( long ) - diff );
+                    rs = 8 * diff;
                     
-                    l1 = ( unsigned long )cp2[  7 ] << 56
-                       | ( unsigned long )cp2[  6 ] << 48
-                       | ( unsigned long )cp2[  5 ] << 40
-                       | ( unsigned long )cp2[  4 ] << 32
-                       | ( unsigned long )cp2[  3 ] << 24
-                       | ( unsigned long )cp2[  2 ] << 16
-                       | ( unsigned long )cp2[  1 ] << 8
-                       | ( unsigned long )cp2[  0 ];
-                    l2 = ( unsigned long )cp2[ 15 ] << 56
-                       | ( unsigned long )cp2[ 14 ] << 48
-                       | ( unsigned long )cp2[ 13 ] << 40
-                       | ( unsigned long )cp2[ 12 ] << 32
-                       | ( unsigned long )cp2[ 11 ] << 24
-                       | ( unsigned long )cp2[ 10 ] << 16
-                       | ( unsigned long )cp2[  9 ] << 8
-                       | ( unsigned long )cp2[  8 ];
-                      
-                    #else
+                    /* Reads a long, and saves the remaining bytes that we'll have to write */
+                    l1   = *( lp2++ );
+                    l2   = l1 >> ( diff * 8 );
                     
-                    l1 = ( unsigned long )cp2[ 3 ] << 24
-                       | ( unsigned long )cp2[ 2 ] << 16
-                       | ( unsigned long )cp2[ 1 ] << 8
-                       | ( unsigned long )cp2[ 0 ];
-                    l2 = ( unsigned long )cp2[ 7 ] << 24
-                       | ( unsigned long )cp2[ 6 ] << 16
-                       | ( unsigned long )cp2[ 5 ] << 8
-                       | ( unsigned long )cp2[ 4 ];
-                      
-                    #endif
+                    /* Writes bytes one by one until the destination is aligned on a long */
+                    for( i = 0; i < diff; i++ )
+                    {
+                        *( cp1++ ) = ( unsigned char )( ( l1 >> ( i * 8 ) ) & 0xFF );
+                    }
                     
-                    lp1[ 0 ]   = l1;
-                    lp1[ 1 ]   = l2;
-                    lp1       += 2;
-                    cp2       += sizeof( unsigned long ) * 2;
-                    n         -= sizeof( unsigned long ) * 2;
+                    n -= sizeof( long );
+                    
+                    lp1 = ( void * )cp1;
+                    
+                    /* Writes 4 longs into the aligned destination, saving the remaining bytes */
+                    while( n > sizeof( long ) * 4 )
+                    {
+                        l1       = lp2[ 0 ];
+                        lp1[ 0 ] = ( l1 << ls ) | l2;
+                        l2       = l1 >> rs;
+                        
+                        l1       = lp2[ 1 ];
+                        lp1[ 1 ] = ( l1 << ls ) | l2;
+                        l2       = l1 >> rs;
+                        
+                        l1       = lp2[ 2 ];
+                        lp1[ 2 ] = ( l1 << ls ) | l2;
+                        l2       = l1 >> rs;
+                        
+                        l1       = lp2[ 3 ];
+                        lp1[ 3 ] = ( l1 << ls ) | l2;
+                        l2       = l1 >> rs;
+                        
+                        lp1 += 4;
+                        lp2 += 4;
+                        
+                        n -= sizeof( long ) * 4;
+                    }
                 }
                 
                 cp1 = ( void * )lp1;
+                cp2 = ( void * )lp2;
                 
+                /* Writes the remaining bytes, due to the alignment */
+                if( diff != 0 )
+                {
+                    diff = sizeof( long ) - diff;
+                    
+                    while( diff-- )
+                    {
+                        *( cp1++ ) = ( unsigned char )( l2 & 0xFF );
+                        l2         = l2 >> 8;
+                    }
+                }
+                
+                /* Writes the remaining bytes */
                 while( n-- )
                 {
                     *( cp1++ ) = *( cp2++ );

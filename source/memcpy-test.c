@@ -106,7 +106,7 @@ int main( void )
     s1 = calloc( 100, 1 );
     s2 = malloc( 100 );
     
-    memset( s1, 'a', 99 );
+    memcpy( s1, "ABCDEFGH ABCDEFGH ABCDEFGH ABCDEFGH ABCDEFGH ABCDEFGH ABCDEFGH ABCDEFGH ABCDEFGH ABCDEFGH ABCDEFGH ", 99 );
     
     memset( s2, ' ', 99 );
     memcpy( s2, s1, 100 );
