@@ -29,6 +29,10 @@
 		05A55D0317BA5A84000E9E00 /* memcpy.32.s */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.asm; path = memcpy.32.s; sourceTree = "<group>"; };
 		05A55D0417BA5A84000E9E00 /* memcpy.64.s */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.asm; path = memcpy.64.s; sourceTree = "<group>"; };
 		05A55D0517BA5A84000E9E00 /* memcpy.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = memcpy.c; sourceTree = "<group>"; };
+		05A55D0917BC4A9E000E9E00 /* strcat-test.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = "strcat-test.c"; sourceTree = "<group>"; };
+		05A55D0A17BC4A9E000E9E00 /* strcat.32.s */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.asm; path = strcat.32.s; sourceTree = "<group>"; };
+		05A55D0B17BC4A9E000E9E00 /* strcat.64.s */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.asm; path = strcat.64.s; sourceTree = "<group>"; };
+		05A55D0C17BC4A9E000E9E00 /* strcat.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = strcat.c; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXGroup section */
@@ -60,6 +64,10 @@
 				05731F8717B094100025409E /* memset.64.s */,
 				05A55CCD17B41E55000E9E00 /* memset.c */,
 				05731F8817B094100025409E /* memset-test.c */,
+				05A55D0A17BC4A9E000E9E00 /* strcat.32.s */,
+				05A55D0B17BC4A9E000E9E00 /* strcat.64.s */,
+				05A55D0C17BC4A9E000E9E00 /* strcat.c */,
+				05A55D0917BC4A9E000E9E00 /* strcat-test.c */,
 				0548EF3F17B03565003E22B7 /* strlen.32.s */,
 				0548EF4017B03565003E22B7 /* strlen.64.s */,
 				05A55CCF17B41E55000E9E00 /* strlen.c */,
