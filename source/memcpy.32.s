@@ -600,7 +600,7 @@ _memcpy32:
                 cmp         edx,        64
                 jb          .source_dest_aligned_8
                 
-                ; Reads and writes 128 bytes from the source buffer into
+                ; Reads and writes 64 bytes from the source buffer into
                 ; the destination buffer
                 mov         eax,            [ esi ]
                 mov         ebx,            [ esi + 4 ]
