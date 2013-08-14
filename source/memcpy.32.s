@@ -163,25 +163,283 @@ _memcpy32_sse2:
     push    ebp
     mov     ebp,        esp
     
-    ; Saves EDI, ESI and EBX as we are going to use them
+    ; Saves EDI and ESI as we are going to use them
     push    edi
     push    esi
-    push    ebx
     
     ; Gets the arguments from the stack
     mov     edi,        [ ebp +  8 ]
     mov     esi,        [ ebp + 12 ]
     mov     edx,        [ ebp + 16 ]
     
-    mov     eax,        edi
+    ; Checks for a NULL destination pointer
+    test        edi,        edi
+    jz          .ret
     
-    ; Restores saved registers
-    pop         ebx
-    pop         esi
-    pop         edi
-    pop         ebp
+    ; Checks for a NULL source pointer
+    test        esi,        esi
+    jz          .ret
     
-    ret
+    ; Gets the number of misaligned bytes in the original source pointer
+    mov         eax,        esi
+    mov         ecx,        esi
+    and         ecx,        -16
+    sub         eax,        ecx
+    mov         ecx,        16
+    sub         ecx,        eax
+    
+    ; Checks if the source pointer is already aligned
+    cmp         ecx,        16
+    jne         .source_notaligned
+        
+    .source_aligned:
+        
+        ; Gets the number of misaligned bytes in the original destination pointer
+        mov         eax,        edi
+        mov         ecx,        edi
+        and         ecx,        -16
+        sub         eax,        ecx
+        mov         ecx,        16
+        sub         ecx,        eax
+        
+        ; Checks if the destination pointer is also aligned
+        cmp         ecx,        16
+        jne         .dest_notaligned
+        
+        .source_dest_aligned:
+            
+            ; Writes 128 bytes at a time, if possible
+            cmp         edx,        128
+            jb          .source_dest_aligned_64
+            
+            .source_dest_aligned_128:
+                
+                ; Reads 128 bytes from the source buffer
+                movdqa      xmm0,           [ esi ]
+                movdqa      xmm1,           [ esi + 16 ]
+                movdqa      xmm2,           [ esi + 32 ]
+                movdqa      xmm3,           [ esi + 48 ]
+                movdqa      xmm4,           [ esi + 64 ]
+                movdqa      xmm5,           [ esi + 80 ]
+                movdqa      xmm6,           [ esi + 96 ]
+                movdqa      xmm7,           [ esi + 112 ]
+                
+                ; Writes 128 bytes into the destination buffer
+                movdqa      [ edi ],        xmm0
+                movdqa      [ edi +  16 ],  xmm1
+                movdqa      [ edi +  32 ],  xmm2
+                movdqa      [ edi +  48 ],  xmm3
+                movdqa      [ edi +  64 ],  xmm4
+                movdqa      [ edi +  80 ],  xmm5
+                movdqa      [ edi +  96 ],  xmm6
+                movdqa      [ edi + 112 ],  xmm7
+                
+                ; Advances the source and destination pointers and decreases
+                ; the number of bytes to write
+                add         edi,        128
+                add         esi,        128
+                sub         edx,        128
+                
+                ; Writes 128 bytes at a time, if possible
+                cmp         edx,        128
+                jge         .source_dest_aligned_128
+            
+            .source_dest_aligned_64:
+                
+                ; Writes 64 bytes at a time, if possible
+                cmp         edx,        64
+                jb          .source_dest_aligned_16
+                
+                ; Reads 64 bytes from the source buffer
+                movdqa      xmm0,           [ esi ]
+                movdqa      xmm1,           [ esi + 16 ]
+                movdqa      xmm2,           [ esi + 32 ]
+                movdqa      xmm3,           [ esi + 48 ]
+                
+                ; Writes 64 bytes into the destination buffer
+                movdqa      [ edi ],        xmm0
+                movdqa      [ edi +  16 ],  xmm1
+                movdqa      [ edi +  32 ],  xmm2
+                movdqa      [ edi +  48 ],  xmm3
+                
+                ; Advances the source and destination pointers and decreases
+                ; the number of bytes to write
+                add         edi,        64
+                add         esi,        64
+                sub         edx,        64
+                
+                ; Continues writing
+                jmp         .source_dest_aligned_64
+                
+            .source_dest_aligned_16:
+                
+                ; Writes 16 bytes at a time, if possible
+                cmp         edx,        16
+                jb          .copy_end
+                
+                ; Reads 16 bytes from the source buffer
+                movdqa      xmm0,       [ esi ]
+                
+                ; Writes 16 bytes into the destination buffer
+                movdqa      [ edi ],    xmm0
+                
+                ; Advances the source and destination pointers and decreases
+                ; the number of bytes to write
+                add         edi,        16
+                add         esi,        16
+                sub         edx,        16
+                
+                ; Continues writing
+                jmp         .source_dest_aligned_16
+                
+                ; Writes remaining bytes one by one
+                jmp         .copy_end
+                
+        .dest_notaligned:
+            
+            ; Writes 128 bytes at a time, if possible
+            cmp         edx,        128
+            jb          .dest_notaligned_64
+            
+            .dest_notaligned_128:
+                
+                ; Reads 128 bytes from the source buffer
+                movdqa      xmm0,           [ esi ]
+                movdqa      xmm1,           [ esi + 16 ]
+                movdqa      xmm2,           [ esi + 32 ]
+                movdqa      xmm3,           [ esi + 48 ]
+                movdqa      xmm4,           [ esi + 64 ]
+                movdqa      xmm5,           [ esi + 80 ]
+                movdqa      xmm6,           [ esi + 96 ]
+                movdqa      xmm7,           [ esi + 112 ]
+                
+                ; Writes 128 bytes into the destination buffer
+                movdqu      [ edi ],        xmm0
+                movdqu      [ edi +  16 ],  xmm1
+                movdqu      [ edi +  32 ],  xmm2
+                movdqu      [ edi +  48 ],  xmm3
+                movdqu      [ edi +  64 ],  xmm4
+                movdqu      [ edi +  80 ],  xmm5
+                movdqu      [ edi +  96 ],  xmm6
+                movdqu      [ edi + 112 ],  xmm7
+                
+                ; Advances the source and destination pointers and decreases
+                ; the number of bytes to write
+                add         edi,        128
+                add         esi,        128
+                sub         edx,        128
+                
+                ; Writes 128 bytes at a time, if possible
+                cmp         edx,        128
+                jge         .dest_notaligned_128
+            
+            .dest_notaligned_64:
+                
+                ; Writes 64 bytes at a time, if possible
+                cmp         edx,        64
+                jb          .dest_notaligned_16
+                
+                ; Reads 64 bytes from the source buffer
+                movdqa      xmm0,           [ esi ]
+                movdqa      xmm1,           [ esi + 16 ]
+                movdqa      xmm2,           [ esi + 32 ]
+                movdqa      xmm3,           [ esi + 48 ]
+                
+                ; Writes 64 bytes into the destination buffer
+                movdqu      [ edi ],        xmm0
+                movdqu      [ edi +  16 ],  xmm1
+                movdqu      [ edi +  32 ],  xmm2
+                movdqu      [ edi +  48 ],  xmm3
+                
+                ; Advances the source and destination pointers and decreases
+                ; the number of bytes to write
+                add         edi,        64
+                add         esi,        64
+                sub         edx,        64
+                
+                ; Continues writing
+                jmp         .dest_notaligned_64
+                
+            .dest_notaligned_16:
+                
+                ; Writes 16 bytes at a time, if possible
+                cmp         edx,        16
+                jb          .copy_end
+                
+                ; Reads 16 bytes from the source buffer
+                movdqa      xmm0,       [ esi ]
+                
+                ; Writes 16 bytes into the destination buffer
+                movdqu      [ edi ],    xmm0
+                
+                ; Advances the source and destination pointers and decreases
+                ; the number of bytes to write
+                add         edi,        16
+                add         esi,        16
+                sub         edx,        16
+                
+                ; Continues writing
+                jmp         .dest_notaligned_16
+                
+    .copy_end:
+        
+        ; Checks if we have bytes to write
+        test        edx,        edx
+        jz          .ret
+        
+        ; Reads a byte from the source buffer
+        mov         al,         [ esi ]
+        
+        ; Writes a byte into the destination buffer
+        mov         [ edi ],    al
+        
+        ; Advances the source and destination pointers and decreases
+        ; the number of bytes to write
+        add         edi,        1
+        add         esi,        1
+        sub         edx,        1
+        sub         ecx,        1
+        
+        ; Not aligned - Continues writing single bytes
+        jmp         .copy_end
+        
+    .source_notaligned:
+        
+        ; Checks if we have bytes to write
+        test        edx,        edx
+        jz          .ret
+        
+        ; Reads a byte from the source buffer
+        mov         al,         [ esi ]
+        
+        ; Writes a byte into the destination buffer
+        mov         [ edi ],    al
+        
+        ; Advances the source and destination pointers and decreases
+        ; the number of bytes to write
+        add         edi,        1
+        add         esi,        1
+        sub         edx,        1
+        sub         ecx,        1
+        
+        ; Checks if we're aligned
+        test        ecx,        ecx
+        jz          .source_aligned
+        
+        ; Not aligned - Continues writing single bytes
+        jmp         .source_notaligned
+        
+    .ret:
+        
+        ; Returns the original destination pointer
+        mov         eax,    [ ebp +  8 ]
+        
+        ; Restores saved registers
+        pop         esi
+        pop         edi
+        pop         ebp
+        
+        ret
 
 ;-------------------------------------------------------------------------------
 ; 32-bits optimized memcpy() function

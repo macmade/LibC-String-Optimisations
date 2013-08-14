@@ -320,7 +320,6 @@ _memcpy64_sse2:
                 movdqa      xmm7,           [ rsi + 112 ]
                 
                 ; Writes 128 bytes into the destination buffer
-                movdqa      xmm0,           [ rsi ]
                 movdqu      [ rdi ],        xmm0
                 movdqu      [ rdi +  16 ],  xmm1
                 movdqu      [ rdi +  32 ],  xmm2
