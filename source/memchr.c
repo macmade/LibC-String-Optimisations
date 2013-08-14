@@ -81,6 +81,7 @@ void * xeos_memchr_c( const void * p, int c, size_t n )
     cp = p;
     c &= 0xFF;
     
+    /* Reads one byte at a time until the pointer is aligned to a long */
     while( n > 0 && ( ( ( uintptr_t )cp & ( uintptr_t )-sizeof( unsigned long ) ) < ( uintptr_t )cp ) )
     {
         if( *( cp++ ) == ( unsigned char )c )
@@ -102,6 +103,7 @@ void * xeos_memchr_c( const void * p, int c, size_t n )
     mask = mask << 32 | mask;
     #endif
     
+    /* Reads one long at a time */
     while( n > sizeof( unsigned long ) )
     {
         l  = *( lp++ );
@@ -146,6 +148,7 @@ void * xeos_memchr_c( const void * p, int c, size_t n )
     
     cp = ( unsigned char * )( ( void * )lp );
     
+    /* Reads remaining bytes one by one */
     while( n-- )
     {
         if( *( cp++ ) == ( unsigned char )c )
