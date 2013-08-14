@@ -67,13 +67,12 @@
 void * xeos_memcpy_c( void * restrict s1, const void * restrict s2, size_t n );
 void * xeos_memcpy_c( void * restrict s1, const void * restrict s2, size_t n )
 {
-    /* Note: scopes are used in order to comply with the 'restrict' keyword */
-    
     if( s1 == NULL || s2 == NULL || n == 0 )
     {
         return s1;
     }
     
+    /* Note: a scope is used in order to comply with the 'restrict' keyword */
     {
         unsigned char       * cp1;
         const unsigned char * cp2;
