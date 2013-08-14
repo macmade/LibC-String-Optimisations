@@ -166,7 +166,7 @@ void * xeos_memcpy_c( void * restrict s1, const void * restrict s2, size_t n )
                 l1   = 0;
                 l2   = 0;
                 
-                if( n > sizeof( long ) * 5 )
+                if( n >= sizeof( long ) * 5 )
                 {
                     /* Number of bytes to write one by one until the destination is aligned on a long */
                     diff = sizeof( unsigned long ) - ( ( uintptr_t )cp1 - ( ( uintptr_t )cp1 & ( uintptr_t )-sizeof( unsigned long ) ) );
