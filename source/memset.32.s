@@ -188,8 +188,8 @@ _memset32_sse2:
     pxor    xmm0,       xmm0
     
     ; Checks if bytes needs to be set to zero
-    cmp     esi,        0
-    je      .padded
+    test    esi,        esi
+    jz      .padded
     
     .pad:
         
@@ -219,8 +219,8 @@ _memset32_sse2:
         sub     eax,        edi
         
         ; Checks if the pointer is already aligned
-        cmp     eax,        0
-        je      .aligned
+        test     eax,        eax
+        jz      .aligned
         
         ; If not, computes the number of bytes to be written until we are
         ; aligned on the next 16-byte boundary
@@ -239,8 +239,8 @@ _memset32_sse2:
     .notaligned_loop:
         
         ; Checks if we have bytes to write
-        cmp     edx,        0
-        je      .end
+        test     edx,        edx
+        jz      .end
         
         ; Writes a byte into the memory buffer
         mov     [ edi ],    al
@@ -255,8 +255,8 @@ _memset32_sse2:
         
         ; Checks if we are aligned to a 16-byte boundary. If so, the SSE
         ; instructions can be safely used
-        cmp     ecx,        0
-        je      .aligned
+        test     ecx,        ecx
+        jz      .aligned
         jmp     .notaligned_loop
         
     .aligned:
@@ -319,8 +319,8 @@ _memset32_sse2:
         jge     .aligned_16
         
         ; Checks if we're done writing bytes
-        cmp     edx,            0
-        je      .end
+        test    edx,            edx
+        jz      .end
         
         ; If we still have byte to write, writes them one by one
         jmp     .aligned_end
@@ -350,8 +350,8 @@ _memset32_sse2:
         jge     .aligned_16
         
         ; Checks if we're done writing bytes
-        cmp     edx,            0
-        je      .end
+        test    edx,            edx
+        jz      .end
         
         ; If we still have byte to write, writes them one by one
         jmp     .aligned_end
@@ -375,8 +375,8 @@ _memset32_sse2:
         jge     .aligned_16
         
         ; Checks if we're done writing bytes
-        cmp     edx,            0
-        je      .end
+        test    edx,            edx
+        jz      .end
         
         ; If we still have byte to write, writes them one by one
         jmp     .aligned_end
@@ -395,8 +395,8 @@ _memset32_sse2:
         jge     .aligned
         
         ; Checks if we're done writing bytes
-        cmp     edx,            0
-        je      .end
+        test    edx,            edx
+        jz      .end
         
         ; If we still have byte to write, writes them one by one
         jmp     .aligned_end
@@ -460,8 +460,8 @@ _memset32:
     jz      .end
     
     ; Checks if bytes needs to be set to zero
-    cmp     esi,        0
-    je      .padded
+    test    esi,        esi
+    jz      .padded
     
     .pad:
         
@@ -485,8 +485,8 @@ _memset32:
         sub     eax,        edi
         
         ; Checks if the pointer is already aligned
-        cmp     eax,        0
-        je      .aligned
+        test    eax,        eax
+        jz      .aligned
         
         ; If not, computes the number of bytes to be written until we are
         ; aligned on the next 4-byte boundary
@@ -505,8 +505,8 @@ _memset32:
     .notaligned_loop:
         
         ; Checks if we have bytes to write
-        cmp     edx,        0
-        je      .end
+        test    edx,        edx
+        jz      .end
         
         ; Writes a byte into the memory buffer
         mov     [ edi ],    al
@@ -521,8 +521,8 @@ _memset32:
         
         ; Checks if we are aligned to a 4-byte boundary. If so, we'll be able
         ; to write more than one byte at a time
-        cmp     ecx,        0
-        je      .aligned
+        test    ecx,        ecx
+        jz      .aligned
         jmp     .notaligned_loop
         
     .aligned:
@@ -608,8 +608,8 @@ _memset32:
         jge     .aligned_16
         
         ; Checks if we're done writing bytes
-        cmp     edx,            0
-        je      .end
+        test    edx,            edx
+        jz      .end
         
         ; If we still have byte to write, writes them one by one
         jmp     .aligned_end
@@ -651,8 +651,8 @@ _memset32:
         jge     .aligned_16
         
         ; Checks if we're done writing bytes
-        cmp     edx,            0
-        je      .end
+        test    edx,            edx
+        jz      .end
         
         ; If we still have byte to write, writes them one by one
         jmp     .aligned_end
@@ -682,8 +682,8 @@ _memset32:
         jge     .aligned_16
         
         ; Checks if we're done writing bytes
-        cmp     edx,            0
-        je      .end
+        test    edx,            edx
+        jz      .end
         
         ; If we still have byte to write, writes them one by one
         jmp     .aligned_end
@@ -705,8 +705,8 @@ _memset32:
         jge     .aligned
         
         ; Checks if we're done writing bytes
-        cmp     edx,            0
-        je      .end
+        test    edx,            edx
+        jz      .end
         
         ; If we still have byte to write, writes them one by one
         jmp     .aligned_end
