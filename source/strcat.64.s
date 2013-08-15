@@ -395,7 +395,102 @@ _strcat64:
     ; Advances the destination string pointer after its last character
     add         rdi,    rax
     
+    ; Gets the number of misaligned bytes in the original source pointer
+    mov         rax,        rsi
+    mov         rcx,        rsi
+    and         rcx,        -8
+    sub         rax,        rcx
+    mov         rcx,        8
+    sub         rcx,        rax
     
+    ; Checks if the source pointer is already aligned
+    cmp         rcx,        8
+    jne         .source_notaligned
+    
+    .source_aligned:
+        
+        ; IMPORTANT NOTE
+        ; 
+        ; At this point, the source pointer is aligned to a 8-byte boundary.
+        ; The destination pointer might not be.
+        ; As the x86/x86-64 architecture allows unaligned memory access,
+        ; let's pretend we don't care about this.
+        ; Of course, unaligned memory access might be slower, but the
+        ; destination pointer should be aligned most of the time.
+        ; Moreover, there's almost no performance penalty with recent CPUs
+        ; from Intel (Sandy Bridge, Nehalem).
+        
+        ; Reads 8 bytes from the source string
+        mov         rax,        [ rsi ]
+        
+        ; Checks if a byte from RDX is zero - Thanks to Sean Eron Anderson:
+        ; http://graphics.stanford.edu/~seander/bithacks.html
+        mov         r10,        0x0101010101010101
+        mov         r11,        0x8080808080808080
+        mov         rcx,        rax
+        mov         r9,         rax
+        sub         rcx,        r10
+        not         r9
+        and         r9,         r11
+        and         rcx,        r9
+        test        rcx,        rcx
+        jnz         .copy_end
+        
+        ; Writes 8 bytes into the destination string
+        mov         [ rdi ],    rax
+        
+        ; Advances the source and sestination string pointers
+        add         rdi,        8
+        add         rsi,        8
+        
+        ; Continues copying
+        jmp         .source_aligned
+        
+    .copy_end:
+        
+        ; Reads a byte from the source buffer
+        mov         al,         [ rsi ]
+        
+        ; Writes a byte into the destination buffer
+        mov         [ rdi ],    al
+        
+        ; If zero, we reached the end of the destination string
+        test        al,         al
+        jz          .ret
+        
+        ; Advances the source and destination pointers and decreases
+        ; the number of bytes to write
+        add         rdi,        1
+        add         rsi,        1
+        sub         rcx,        1
+        
+        ; Not aligned - Continues writing single bytes
+        jmp         .copy_end
+        
+    .source_notaligned:
+        
+        ; Reads a byte from the source buffer
+        mov         al,         [ rsi ]
+        
+        ; Writes a byte into the destination buffer
+        mov         [ rdi ],    al
+        
+        ; If zero, we reached the end of the destination string
+        test        al,         al
+        jz          .ret
+        
+        ; Advances the source and destination pointers and decreases
+        ; the number of bytes to write
+        add         rdi,        1
+        add         rsi,        1
+        sub         rcx,        1
+        
+        ; Checks if we're aligned
+        test        rcx,        rcx
+        jz          .source_aligned
+        
+        ; Not aligned - Continues writing single bytes
+        jmp         .source_notaligned
     
     .ret:
         

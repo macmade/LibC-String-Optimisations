@@ -500,7 +500,7 @@ _memcpy32:
         
         ; IMPORTANT NOTE
         ; 
-        ; At this point, the source pointer is aligned to a 8-byte boundary.
+        ; At this point, the source pointer is aligned to a 4-byte boundary.
         ; The destination pointer might not be.
         ; As the x86/x86-64 architecture allows unaligned memory access,
         ; let's pretend we don't care about this.

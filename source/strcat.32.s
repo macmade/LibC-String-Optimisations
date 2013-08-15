@@ -165,7 +165,7 @@ _strcat32_sse2:
     push    ebp
     mov     ebp,        esp
     
-    ; Saves EDI, ESI and EBX as we are going to use them
+    ; Saves EDI and ESI as we are going to use them
     push    edi
     push    esi
     
@@ -375,12 +375,140 @@ _strcat32:
     mov     edi,        [ ebp +  8 ]
     mov     esi,        [ ebp + 12 ]
     
-    mov     eax,        edi
+    ; Checks for a NULL destination string pointer
+    test        edi,    edi
+    jz          .ret
     
-    ; Restores saved registers
-    pop         ebx
-    pop         esi
-    pop         edi
-    pop         ebp
+    ; Checks for a NULL source string pointer
+    test        esi,    esi
+    jz          .ret
     
-    ret
+    ; Ensures the stack is aligned on a 16-byte boundary as we'll call
+    ; an external function
+    and         esp,    -16
+    
+    ; Arguments for strlen()
+    sub         esp,    12
+    push        edi
+    
+    ; Gets the length of the destination string
+    call        _strlen
+    
+    ; Resets the stack
+    mov         esp,    ebp
+    sub         esp,    12
+    
+    ; Advances the destination string pointer after its last character
+    add         edi,    eax
+    
+    ; Gets the number of misaligned bytes in the original source pointer
+    mov         eax,        esi
+    mov         ecx,        esi
+    and         ecx,        -4
+    sub         eax,        ecx
+    mov         ecx,        4
+    sub         ecx,        eax
+    
+    ; Checks if the source pointer is already aligned
+    cmp         ecx,        4
+    jne         .source_notaligned
+    
+    .source_aligned:
+        
+        ; IMPORTANT NOTE
+        ; 
+        ; At this point, the source pointer is aligned to a 4-byte boundary.
+        ; The destination pointer might not be.
+        ; As the x86/x86-64 architecture allows unaligned memory access,
+        ; let's pretend we don't care about this.
+        ; Of course, unaligned memory access might be slower, but the
+        ; destination pointer should be aligned most of the time.
+        ; Moreover, there's almost no performance penalty with recent CPUs
+        ; from Intel (Sandy Bridge, Nehalem).
+        
+        ; Reads 4 bytes from the source string
+        mov         eax,        [ esi ]
+        
+        ; Checks if a byte from ECX is zero - Thanks to Sean Eron Anderson:
+        ; http://graphics.stanford.edu/~seander/bithacks.html
+        mov         edx,    0x01010101
+        mov         ebx,    eax
+        sub         ebx,    edx
+        
+        mov         edx,    0x80808080
+        mov         ecx,    eax
+        not         ecx
+        and         ecx,    edx
+        
+        and         ebx,    ecx
+        test        ebx,    ebx
+        jnz         .copy_end
+        
+        ; Writes 4 bytes into the destination string
+        mov         [ edi ],    eax
+        
+        ; Advances the source and sestination string pointers
+        add         edi,        4
+        add         esi,        4
+        
+        ; Continues copying
+        jmp         .source_aligned
+                    
+    .copy_end:
+        
+        ; Reads a byte from the source buffer
+        mov         al,         [ esi ]
+        
+        ; Writes a byte into the destination buffer
+        mov         [ edi ],    al
+        
+        ; If zero, we reached the end of the destination string
+        test        al,         al
+        jz          .ret
+        
+        ; Advances the source and destination pointers and decreases
+        ; the number of bytes to write
+        add         edi,        1
+        add         esi,        1
+        sub         ecx,        1
+        
+        ; Not aligned - Continues writing single bytes
+        jmp         .copy_end
+        
+    .source_notaligned:
+        
+        ; Reads a byte from the source buffer
+        mov         al,         [ esi ]
+        
+        ; Writes a byte into the destination buffer
+        mov         [ edi ],    al
+        
+        ; If zero, we reached the end of the destination string
+        test        al,         al
+        jz          .ret
+        
+        ; Advances the source and destination pointers and decreases
+        ; the number of bytes to write
+        add         edi,        1
+        add         esi,        1
+        sub         ecx,        1
+        
+        ; Checks if we're aligned
+        test        ecx,        ecx
+        jz          .source_aligned
+        
+        ; Not aligned - Continues writing single bytes
+        jmp         .source_notaligned
+    
+    .ret:
+        
+        ; Returns the destination string pointer
+        mov         eax,    [ ebp + 8 ]
+        
+        ; Restores saved registers
+        pop         ebx
+        pop         esi
+        pop         edi
+        pop         ebp
+        
+        ret
