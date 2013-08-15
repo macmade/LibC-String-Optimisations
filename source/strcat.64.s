@@ -80,6 +80,10 @@ section .text
 ; Makes the entry point visible to the linker
 global _xeos_strcat
 
+
+
+extern _strlen
+
 ;-------------------------------------------------------------------------------
 ; C99 - 64 bits strcat() function
 ; 
@@ -173,8 +177,175 @@ _xeos_strcat:
 ;-------------------------------------------------------------------------------
 _strcat64_sse2:
     
-    mov rax,    rdi
-    ret
+    ; Creates a stack frame, so we can safely call strlen().
+    push        rbp
+    mov         rbp,    rsp
+    
+    ; Checks for a NULL destination string pointer
+    test        rdi,    rdi
+    jz          .ret
+    
+    ; Checks for a NULL source string pointer
+    test        rsi,    rsi
+    jz          .ret
+    
+    ; Stores the original destination string pointer in R8
+    mov         r8,     rdi
+    
+    ; Saves input registers
+    push        rdi
+    push        rsi
+    
+    ; Gets the length of the destination string
+    call        _strlen
+    
+    ; Restores inputs registers
+    pop         rsi
+    pop         rdi
+    
+    ; Advances the destination string pointer after its last character
+    add         rdi,    rax
+    
+    ; Gets the number of misaligned bytes in the original source pointer
+    mov         rax,        rsi
+    mov         rcx,        rsi
+    and         rcx,        -16
+    sub         rax,        rcx
+    mov         rcx,        16
+    sub         rcx,        rax
+    
+    ; Checks if the source pointer is already aligned
+    cmp         rcx,        16
+    jne         .source_notaligned
+    
+    .source_aligned:
+        
+        ; Gets the number of misaligned bytes in the original destination pointer
+        mov         rax,        rdi
+        mov         rcx,        rdi
+        and         rcx,        -16
+        sub         rax,        rcx
+        mov         rcx,        16
+        sub         rcx,        rax
+        
+        ; Checks if the destination pointer is also aligned
+        cmp         rcx,        16
+        jne         .dest_notaligned
+        
+        .source_dest_aligned:
+            
+            ; Reads 16 bytes from the source string
+            movdqa      xmm1,       [ rsi ]
+            
+            ; Resets XMM0
+            pxor        xmm0,       xmm0
+            
+            ; Compares 16 bytes from XMM1 with 0 (in XMM0)
+            ; Equal bytes will be set to all 1s in XMM0, others to all 0s
+            pcmpeqb     xmm0,       xmm1
+            
+            ; Gets a mask in RDX with bits set to the most significant
+            ; bits of each bytes from XMM0
+            pmovmskb    rdx,        xmm0
+            
+            ; Checks if a bit is set, meaning a zero byte was found
+            test        rdx,        rdx
+            jnz         .copy_end
+            
+            ; Writes 16 bytes into the destination string
+            movdqa      [ rdi ],    xmm1
+            
+            ; Advances the source and sestination string pointers
+            add         rdi,        16
+            add         rsi,        16
+            
+            ; Continues copying
+            jmp         .source_dest_aligned
+            
+        .dest_notaligned:
+            
+            ; Reads 16 bytes from the source string
+            movdqa      xmm1,       [ rsi ]
+            
+            ; Resets XMM0
+            pxor        xmm0,       xmm0
+            
+            ; Compares 16 bytes from XMM1 with 0 (in XMM0)
+            ; Equal bytes will be set to all 1s in XMM0, others to all 0s
+            pcmpeqb     xmm0,       xmm1
+            
+            ; Gets a mask in RDX with bits set to the most significant
+            ; bits of each bytes from XMM0
+            pmovmskb    rdx,        xmm0
+            
+            ; Checks if a bit is set, meaning a zero byte was found
+            test        rdx,        rdx
+            jnz         .copy_end
+            
+            ; Writes 16 bytes into the destination string
+            movdqu      [ rdi ],    xmm1
+            
+            ; Advances the source and sestination string pointers
+            add         rdi,        16
+            add         rsi,        16
+                
+            jmp         .dest_notaligned
+                    
+    .copy_end:
+        
+        ; Reads a byte from the source buffer
+        mov         al,         [ rsi ]
+        
+        ; Writes a byte into the destination buffer
+        mov         [ rdi ],    al
+        
+        ; If zero, we reached the end of the destination string
+        test        al,         al
+        jz          .ret
+        
+        ; Advances the source and destination pointers and decreases
+        ; the number of bytes to write
+        add         rdi,        1
+        add         rsi,        1
+        sub         rcx,        1
+        
+        ; Not aligned - Continues writing single bytes
+        jmp         .copy_end
+        
+    .source_notaligned:
+        
+        ; Reads a byte from the source buffer
+        mov         al,         [ rsi ]
+        
+        ; Writes a byte into the destination buffer
+        mov         [ rdi ],    al
+        
+        ; If zero, we reached the end of the destination string
+        test        al,         al
+        jz          .ret
+        
+        ; Advances the source and destination pointers and decreases
+        ; the number of bytes to write
+        add         rdi,        1
+        add         rsi,        1
+        sub         rcx,        1
+        
+        ; Checks if we're aligned
+        test        rcx,        rcx
+        jz          .source_aligned
+        
+        ; Not aligned - Continues writing single bytes
+        jmp         .source_notaligned
+    
+    .ret:
+        
+        ; Returns the destination string pointer
+        mov         rax,    r8
+        
+        ; Restores saved registers
+        pop         rbp
+        
+        ret
         
 ;-------------------------------------------------------------------------------
 ; 64-bits optimized strcat() function
@@ -196,5 +367,43 @@ _strcat64_sse2:
 ;-------------------------------------------------------------------------------
 _strcat64:
     
-    mov rax,    rdi
-    ret
+    ; Creates a stack frame, so we can safely call strlen().
+    push        rbp
+    mov         rbp,    rsp
+    
+    ; Checks for a NULL destination string pointer
+    test        rdi,    rdi
+    jz          .ret
+    
+    ; Checks for a NULL source string pointer
+    test        rsi,    rsi
+    jz          .ret
+    
+    ; Stores the original destination string pointer in R8
+    mov         r8,     rdi
+    
+    ; Saves input registers
+    push        rdi
+    push        rsi
+    
+    ; Gets the length of the destination string
+    call        _strlen
+    
+    ; Restores inputs registers
+    pop         rsi
+    pop         rdi
+    
+    ; Advances the destination string pointer after its last character
+    add         rdi,    rax
+    
+    
+    
+    .ret:
+        
+        ; Returns the destination string pointer
+        mov         rax,    r8
+        
+        ; Restores saved registers
+        pop         rbp
+        
+        ret
