@@ -80,6 +80,9 @@ section .text
 ; Makes the entry point visible to the linker
 global _xeos_strcat
 
+; External symbols
+extern _strlen
+
 ;-------------------------------------------------------------------------------
 ; C99 - 32 bits strcat() function
 ; 
@@ -165,21 +168,179 @@ _strcat32_sse2:
     ; Saves EDI, ESI and EBX as we are going to use them
     push    edi
     push    esi
-    push    ebx
     
     ; Gets the arguments from the stack
     mov     edi,        [ ebp +  8 ]
     mov     esi,        [ ebp + 12 ]
     
-    mov     eax,        edi
+    ; Checks for a NULL destination string pointer
+    test        edi,    edi
+    jz          .ret
     
-    ; Restores saved registers
-    pop         ebx
-    pop         esi
-    pop         edi
-    pop         ebp
+    ; Checks for a NULL source string pointer
+    test        esi,    esi
+    jz          .ret
     
-    ret
+    ; Ensures the stack is aligned on a 16-byte boundary as we'll call
+    ; an external function
+    and         esp,    -16
+    
+    ; Arguments for strlen()
+    sub         esp,    12
+    push        edi
+    
+    ; Gets the length of the destination string
+    call        _strlen
+    
+    ; Resets the stack
+    mov         esp,    ebp
+    sub         esp,    8
+    
+    ; Advances the destination string pointer after its last character
+    add         edi,    eax
+    
+    ; Gets the number of misaligned bytes in the original source pointer
+    mov         eax,        esi
+    mov         ecx,        esi
+    and         ecx,        -16
+    sub         eax,        ecx
+    mov         ecx,        16
+    sub         ecx,        eax
+    
+    ; Checks if the source pointer is already aligned
+    cmp         ecx,        16
+    jne         .source_notaligned
+    
+    .source_aligned:
+        
+        ; Gets the number of misaligned bytes in the original destination pointer
+        mov         eax,        edi
+        mov         ecx,        edi
+        and         ecx,        -16
+        sub         eax,        ecx
+        mov         ecx,        16
+        sub         ecx,        eax
+        
+        ; Checks if the destination pointer is also aligned
+        cmp         ecx,        16
+        jne         .dest_notaligned
+        
+        .source_dest_aligned:
+            
+            ; Reads 16 bytes from the source string
+            movdqa      xmm1,       [ esi ]
+            
+            ; Resets XMM0
+            pxor        xmm0,       xmm0
+            
+            ; Compares 16 bytes from XMM1 with 0 (in XMM0)
+            ; Equal bytes will be set to all 1s in XMM0, others to all 0s
+            pcmpeqb     xmm0,       xmm1
+            
+            ; Gets a mask in EDX with bits set to the most significant
+            ; bits of each bytes from XMM0
+            pmovmskb    edx,        xmm0
+            
+            ; Checks if a bit is set, meaning a zero byte was found
+            test        edx,        edx
+            jnz         .copy_end
+            
+            ; Writes 16 bytes into the destination string
+            movdqa      [ edi ],    xmm1
+            
+            ; Advances the source and sestination string pointers
+            add         edi,        16
+            add         esi,        16
+            
+            ; Continues copying
+            jmp         .source_dest_aligned
+            
+        .dest_notaligned:
+            
+            ; Reads 16 bytes from the source string
+            movdqa      xmm1,       [ esi ]
+            
+            ; Resets XMM0
+            pxor        xmm0,       xmm0
+            
+            ; Compares 16 bytes from XMM1 with 0 (in XMM0)
+            ; Equal bytes will be set to all 1s in XMM0, others to all 0s
+            pcmpeqb     xmm0,       xmm1
+            
+            ; Gets a mask in EDX with bits set to the most significant
+            ; bits of each bytes from XMM0
+            pmovmskb    edx,        xmm0
+            
+            ; Checks if a bit is set, meaning a zero byte was found
+            test        edx,        edx
+            jnz         .copy_end
+            
+            ; Writes 16 bytes into the destination string
+            movdqu      [ edi ],    xmm1
+            
+            ; Advances the source and sestination string pointers
+            add         edi,        16
+            add         esi,        16
+                
+            jmp         .dest_notaligned
+                    
+    .copy_end:
+        
+        ; Reads a byte from the source buffer
+        mov         al,         [ esi ]
+        
+        ; Writes a byte into the destination buffer
+        mov         [ edi ],    al
+        
+        ; If zero, we reached the end of the destination string
+        test        al,         al
+        jz          .ret
+        
+        ; Advances the source and destination pointers and decreases
+        ; the number of bytes to write
+        add         edi,        1
+        add         esi,        1
+        sub         ecx,        1
+        
+        ; Not aligned - Continues writing single bytes
+        jmp         .copy_end
+        
+    .source_notaligned:
+        
+        ; Reads a byte from the source buffer
+        mov         al,         [ esi ]
+        
+        ; Writes a byte into the destination buffer
+        mov         [ edi ],    al
+        
+        ; If zero, we reached the end of the destination string
+        test        al,         al
+        jz          .ret
+        
+        ; Advances the source and destination pointers and decreases
+        ; the number of bytes to write
+        add         edi,        1
+        add         esi,        1
+        sub         ecx,        1
+        
+        ; Checks if we're aligned
+        test        ecx,        ecx
+        jz          .source_aligned
+        
+        ; Not aligned - Continues writing single bytes
+        jmp         .source_notaligned
+    
+    .ret:
+        
+        ; Returns the destination string pointer
+        mov         eax,    [ ebp + 8 ]
+        
+        ; Restores saved registers
+        pop         esi
+        pop         edi
+        pop         ebp
+        
+        ret
 
 ;-------------------------------------------------------------------------------
 ; 32-bits optimized strcat() function

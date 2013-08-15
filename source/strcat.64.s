@@ -80,8 +80,7 @@ section .text
 ; Makes the entry point visible to the linker
 global _xeos_strcat
 
-
-
+; External symbols
 extern _strlen
 
 ;-------------------------------------------------------------------------------
