@@ -96,7 +96,7 @@ void * xeos_memcpy_c( void * restrict s1, const void * restrict s2, size_t n )
         /* Checks if the destination is also aligned */
         if( ( ( uintptr_t )lp1 & ( uintptr_t )-sizeof( unsigned long ) ) == ( uintptr_t )lp1 )
         {
-            /* Loop unroll - Copy 16 bytes at a time */
+            /* Loop unroll - Copy 16 longs at a time */
             while( n >= sizeof( unsigned long ) * 16 )
             {
                 lp1[  0 ] = lp2[  0 ];
@@ -120,7 +120,7 @@ void * xeos_memcpy_c( void * restrict s1, const void * restrict s2, size_t n )
                 lp2      += 16;
             }
             
-            /* Loop unroll - Copy 8 bytes at a time */
+            /* Loop unroll - Copy 8 longs at a time */
             while( n >= sizeof( unsigned long ) * 8 )
             {
                 lp1[ 0 ] = lp2[ 0 ];
@@ -136,7 +136,7 @@ void * xeos_memcpy_c( void * restrict s1, const void * restrict s2, size_t n )
                 lp2     += 8;
             }
             
-            /* Copy one bytes at a time */
+            /* Copy one long at a time */
             while( n >= sizeof( unsigned long ) )
             {
                 *( lp1++ ) = *( lp2++ );
