@@ -63,12 +63,91 @@
 
 #include <stdlib.h>
 #include <stdint.h>
+#include <string.h>
 
 char * xeos_strcat_c( char * restrict s1, const char * restrict s2 );
 char * xeos_strcat_c( char * restrict s1, const char * restrict s2 )
 {
-    ( void )s1;
-    ( void )s2;
+    if( s1 == NULL || s2 == NULL )
+    {
+        return s1;
+    }
+    
+    /* Note: a scope is used in order to comply with the 'restrict' keyword */
+    {
+        unsigned char         c;
+        unsigned long         l;
+        unsigned char       * cp1;
+        const unsigned char * cp2;
+        unsigned long       * lp1;
+        const unsigned long * lp2;
+        
+        cp1 = ( unsigned char * )s1;
+        cp2 = ( const unsigned char * )s2;
+        
+        cp1 += strlen( ( const char * )cp1 );
+        
+        /* Copy one byte at a time until the source is aligned on a long */
+        while( ( ( ( uintptr_t )cp2 & ( uintptr_t )-sizeof( unsigned long ) ) < ( uintptr_t )cp2 ) )
+        {
+            c          = *( cp2++ );
+            *( cp1++ ) = c;
+            
+            if( c == 0 )
+            {
+                return s1;
+            }
+        }
+            
+        lp1 = ( void * )cp1;
+        lp2 = ( void * )cp2;
+        
+        /* Checks if the destination is also aligned */
+        if( ( ( uintptr_t )lp1 & ( uintptr_t )-sizeof( unsigned long ) ) == ( uintptr_t )lp1 )
+        {
+            /* Copy one long at a time */
+            while( 1 )
+            {
+                l = *( lp2++ );
+                
+                /*
+                 * Checks if a byte from "l" is zero - Thanks to Sean Eron Anderson:
+                 * http://graphics.stanford.edu/~seander/bithacks.html
+                 */
+                #ifdef __LP64__
+                if( ( ( l - 0x0101010101010101 ) & ( ~l & 0x8080808080808080 ) ) )
+                #else
+                if( ( ( l - 0x01010101 ) & ( ~l & 0x80808080 ) ) )
+                #endif
+                {
+                    lp2--;
+                    
+                    break;
+                }
+                
+                *( lp1++ ) = l;
+            }
+            
+            cp1 = ( void * )lp1;
+            cp2 = ( void * )lp2;
+            
+            /* Copy remaining bytes one by one */
+            while( 1 )
+            {
+                c          = *( cp2++ );
+                *( cp1++ ) = c;
+                
+                if( c == 0 )
+                {
+                    return s1;
+                }
+            }
+        }
+        else
+        {
+            *( cp1 ) = 0;
+        }
+    }
     
     return s1;
 }
