@@ -107,28 +107,28 @@ int main( void )
     s2 = calloc( 140, 1 );
     
     memset( s1, 'a', 69 );
-    memset( s2, 'b', 69 );
+    memset( s2, 'b', 16 );
     printf( "    strcat:                                                     %s\n", strcat( s2, s1 ) );
-    s2[ 69 ] = 0;
+    s2[ 16 ] = 0;
     printf( "    xeos_strcat:                                                %s\n", xeos_strcat( s2, s1 ) );
-    s2[ 69 ] = 0;
+    s2[ 16 ] = 0;
     printf( "    xeos_strcat_c:                                              %s\n", xeos_strcat_c( s2, s1 ) );
-    s2[ 69 ] = 0;
+    s2[ 16 ] = 0;
     
     s1 += 1;
     s2 += 2;
     
     printf( "    strcat (misaligned):                                        %s\n", strcat( s2, s1 ) );
-    s2[ 67 ] = 0;
+    s2[ 14 ] = 0;
     printf( "    xeos_strcat (misaligned):                                   %s\n", xeos_strcat( s2, s1 ) );
-    s2[ 67 ] = 0;
+    s2[ 14 ] = 0;
     printf( "    xeos_strcat_c (misaligned):                                 %s\n", xeos_strcat_c( s2, s1 ) );
     
     free( s1 - 1 );
     free( s2 - 2 );
     
     c        = 10000000;
-    n        = 1000;
+    n        = 1025;
     s1       = calloc( n, 1 );
     s2       = calloc( n * 2, 1 );
     
