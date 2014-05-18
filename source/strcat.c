@@ -145,6 +145,41 @@ char * xeos_strcat_c( char * restrict s1, const char * restrict s2 )
         }
         else
         {
+            {
+                unsigned long l1[ 8 ];
+                unsigned long l2[ 8 ];
+                size_t        diff;
+                size_t        i;
+                size_t        ls;
+                size_t        rs;
+                
+                /* Number of bytes to write one by one until the destination is aligned on a long */
+                diff = sizeof( unsigned long ) - ( ( uintptr_t )cp1 - ( ( uintptr_t )cp1 & ( uintptr_t )-sizeof( unsigned long ) ) );
+                
+                /* Computes left and right shifts now, to save processing time */
+                ls = 8 * ( sizeof( long ) - diff );
+                rs = 8 * diff;
+                
+                /* Reads a long, and saves the remaining bytes that we'll have to write */
+                l1[ 0 ] = *( lp2++ );
+                l2[ 0 ] = l1[ 0 ] >> ( diff * 8 );
+                
+                /* Writes bytes one by one until the destination is aligned on a long */
+                for( i = 0; i < diff; i++ )
+                {
+                    c = ( unsigned char )( ( l1[ 0 ] >> ( i * 8 ) ) & 0xFF );
+                    
+                    *( cp1++ ) = c;
+                    
+                    if( c == 0 )
+                    {
+                        return s1;
+                    }
+                }
+                
+                lp1 = ( void * )cp1;
+            }
+            
             *( cp1 ) = 0;
         }
     }
