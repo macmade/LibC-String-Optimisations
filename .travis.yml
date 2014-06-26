@@ -1,3 +1,5 @@
 language: objective-c
 compiler: clang
 script: make
+before_install:
+  - cd software-deps && make && cd ..
