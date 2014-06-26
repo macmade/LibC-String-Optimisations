@@ -128,9 +128,11 @@ int main( void )
         {
             printf
             (
-                "    Warning - Length mismatch:\n"
+                "    Warning - Length mismatch (%i - %p):\n"
                 "        strlen:      %zi\n"
                 "        xeos_strlen: %zi\n",
+                ( int )j,
+                s,
                 strlen( s ),
                 xeos_strlen( s )
             );
