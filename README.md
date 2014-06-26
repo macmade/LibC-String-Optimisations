@@ -1,6 +1,8 @@
 C String Optimisations
 ======================
 
+[![Build Status](https://img.shields.io/travis/macmade/LibC-String-Optimisations.svg?branch=master&style=flat)](https://travis-ci.org/macmade/LibC-String-Optimisations)
+
 About
 -----
 
