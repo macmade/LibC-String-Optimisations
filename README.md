@@ -3,7 +3,7 @@ C String Optimisations
 
 [![Build Status](https://img.shields.io/travis/macmade/LibC-String-Optimisations.svg?branch=master&style=flat)](https://travis-ci.org/macmade/LibC-String-Optimisations)
 [![Issues](http://img.shields.io/github/issues/macmade/LibC-String-Optimisations.svg?style=flat)](https://github.com/macmade/LibC-String-Optimisations/issues)
-![Status](https://img.shields.io/badge/status-active-brightgreen.svg?style=flat)
+![Status](https://img.shields.io/badge/status-prototype-orange.svg?style=flat)
 ![License](https://img.shields.io/badge/license-xeos-brightgreen.svg?style=flat)
 [![Contact](https://img.shields.io/badge/contact-@macmade-blue.svg?style=flat)](https://twitter.com/macmade)
 
